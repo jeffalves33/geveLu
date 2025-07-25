@@ -1,0 +1,916 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TechCell Manager</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
+    <link href="css/styles.css" rel="stylesheet">
+</head>
+
+<body>
+    <div class="container-fluid">
+        <!-- Header -->
+        <header class="bg-primary text-white p-3 mb-4">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h1 class="h3 mb-0">TechCell Manager</h1>
+                    <small>Controle completo do seu negócio de conserto de celulares</small>
+                </div>
+                <div class="text-end">
+                    <small id="currentDate"></small>
+                </div>
+            </div>
+        </header>
+
+        <!-- Navigation Tabs -->
+        <ul class="nav nav-tabs mb-4" id="mainTabs" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="dashboard-tab" data-bs-toggle="tab" data-bs-target="#dashboard"
+                    type="button" role="tab">
+                    <i class="bi bi-speedometer2"></i> Dashboard
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="services-tab" data-bs-toggle="tab" data-bs-target="#services" type="button"
+                    role="tab">
+                    <i class="bi bi-tools"></i> Serviços
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="sales-tab" data-bs-toggle="tab" data-bs-target="#sales" type="button"
+                    role="tab">
+                    <i class="bi bi-phone"></i> Vendas
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="stock-tab" data-bs-toggle="tab" data-bs-target="#stock" type="button"
+                    role="tab">
+                    <i class="bi bi-box"></i> Estoque
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="financial-tab" data-bs-toggle="tab" data-bs-target="#financial"
+                    type="button" role="tab">
+                    <i class="bi bi-currency-dollar"></i> Financeiro
+                </button>
+            </li>
+        </ul>
+
+        <!-- Tab Content -->
+        <div class="tab-content" id="mainTabContent">
+            <!-- Dashboard Tab -->
+            <div class="tab-pane fade show active" id="dashboard" role="tabpanel">
+                <div class="row g-3 mb-4">
+                    <div class="col-md-3">
+                        <div class="card bg-success text-white">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between">
+                                    <div>
+                                        <h6 class="card-title">Receita Serviços</h6>
+                                        <h4 id="serviceRevenue">R$ 0,00</h4>
+                                        <small id="servicePercentage">0% do total</small>
+                                    </div>
+                                    <i class="bi bi-tools fs-1"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card bg-info text-white">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between">
+                                    <div>
+                                        <h6 class="card-title">Receita Vendas</h6>
+                                        <h4 id="salesRevenue">R$ 0,00</h4>
+                                        <small id="salesPercentage">0% do total</small>
+                                    </div>
+                                    <i class="bi bi-phone fs-1"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card bg-warning text-white">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between">
+                                    <div>
+                                        <h6 class="card-title">A Receber</h6>
+                                        <h4 id="pendingAmount">R$ 0,00</h4>
+                                        <small id="pendingServices">0 serviços pendentes</small>
+                                    </div>
+                                    <i class="bi bi-clock fs-1"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card bg-dark text-white">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between">
+                                    <div>
+                                        <h6 class="card-title">Estoque</h6>
+                                        <h4 id="lowStockCount">0</h4>
+                                        <small>Itens totais</small>
+                                    </div>
+                                    <i class="bi bi-box-seam fs-1"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="card">
+                            <div class="card-header">
+                                <h5>Serviços Recentes</h5>
+                            </div>
+                            <div class="card-body">
+                                <div id="recentServices">
+                                    <!-- Serviços recentes serão carregados aqui -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="card">
+                            <div class="card-header">
+                                <h5>Vendas Recentes</h5>
+                            </div>
+                            <div class="card-body">
+                                <div id="recentSales">
+                                    <!-- Vendas recentes serão carregadas aqui -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Services Tab -->
+            <div class="tab-pane fade" id="services" role="tabpanel">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h4>Gerenciar Serviços</h4>
+                    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#serviceModal">
+                        <i class="bi bi-plus"></i> Novo Serviço
+                    </button>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <h5>Lista de Serviços</h5>
+                            </div>
+                            <div class="col-md-6">
+                                <input type="text" class="form-control" id="serviceSearch"
+                                    placeholder="Buscar serviços...">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-striped">
+                                <thead>
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>Cliente</th>
+                                        <th>Aparelho</th>
+                                        <th>Problema</th>
+                                        <th>Valor</th>
+                                        <th>Status</th>
+                                        <th>Entrega</th>
+                                        <th>Ações</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="servicesTable">
+                                    <!-- Serviços serão carregados aqui -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sales Tab -->
+            <div class="tab-pane fade" id="sales" role="tabpanel">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h4>Gerenciar Vendas</h4>
+                    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#saleModal">
+                        <i class="bi bi-plus"></i> Nova Venda
+                    </button>
+                </div>
+
+                <div class="row g-3 mb-4">
+                    <div class="col-md-4">
+                        <div class="card bg-primary text-white">
+                            <div class="card-body">
+                                <h6>Total em Vendas</h6>
+                                <h4 id="totalSalesValue">R$ 0,00</h4>
+                                <small id="totalSalesCount">0 aparelhos vendidos</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card bg-success text-white">
+                            <div class="card-body">
+                                <h6>Lucro Total</h6>
+                                <h4 id="totalProfit">R$ 0,00</h4>
+                                <small id="averageMargin">Margem média: 0%</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card bg-info text-white">
+                            <div class="card-body">
+                                <h6>Ticket Médio</h6>
+                                <h4 id="averageTicket">R$ 0,00</h4>
+                                <small>Por aparelho vendido</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <h5>Histórico de Vendas</h5>
+                            </div>
+                            <div class="col-md-6">
+                                <input type="text" class="form-control" id="salesSearch" placeholder="Buscar vendas...">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-striped">
+                                <thead>
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>Aparelho</th>
+                                        <th>Estado</th>
+                                        <th>Preço Compra</th>
+                                        <th>Preço Venda</th>
+                                        <th>Lucro</th>
+                                        <th>Data</th>
+                                        <th>Cliente</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="salesTable">
+                                    <!-- Vendas serão carregadas aqui -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Stock Tab -->
+            <div class="tab-pane fade" id="stock" role="tabpanel">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h4>Controle de Estoque</h4>
+                    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#stockModal">
+                        <i class="bi bi-plus"></i> Novo Item
+                    </button>
+                </div>
+
+                <div class="row g-3 mb-4">
+                    <div class="col-md-4">
+                        <div class="card bg-primary text-white">
+                            <div class="card-body">
+                                <h6>Total de Itens</h6>
+                                <h4 id="totalStockItems">0</h4>
+                                <small id="totalStockTypes">0 tipos diferentes</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card bg-success text-white">
+                            <div class="card-body">
+                                <h6>Valor Total</h6>
+                                <h4 id="totalStockValue">R$ 0,00</h4>
+                                <small>Valor do estoque</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card bg-danger text-white">
+                            <div class="card-body">
+                                <h6>Sem Estoque</h6>
+                                <h4 id="outOfStockItems">0</h4>
+                                <small>Itens zerados</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <div class="row">
+                            <div class="col-md-4">
+                                <h5>Itens em Estoque</h5>
+                            </div>
+                            <div class="col-md-4">
+                                <select class="form-select" id="stockCategoryFilter">
+                                    <option value="all">Todas as categorias</option>
+                                    <option value="tela">Telas</option>
+                                    <option value="bateria">Baterias</option>
+                                    <option value="aparelho">Aparelhos</option>
+                                    <option value="ferramenta">Ferramentas</option>
+                                    <option value="outros">Outros</option>
+                                </select>
+                            </div>
+                            <div class="col-md-4">
+                                <input type="text" class="form-control" id="stockSearch" placeholder="Buscar itens...">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-striped">
+                                <thead>
+                                    <tr>
+                                        <th>Item</th>
+                                        <th>Categoria</th>
+                                        <th>Quantidade</th>
+                                        <th>Preço Compra</th>
+                                        <th>Preço Venda</th>
+                                        <th>Estado</th>
+                                        <th>Localização</th>
+                                        <th>Ações</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="stockTable">
+                                    <!-- Itens do estoque serão carregados aqui -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Financial Tab -->
+            <div class="tab-pane fade" id="financial" role="tabpanel">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h4>Controle Financeiro</h4>
+                    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#transactionModal">
+                        <i class="bi bi-plus"></i> Nova Transação
+                    </button>
+                </div>
+
+                <div class="row g-3 mb-4">
+                    <div class="col-md-3">
+                        <div class="card bg-success text-white">
+                            <div class="card-body">
+                                <h6>Total Entradas</h6>
+                                <h4 id="totalIncome">R$ 0,00</h4>
+                                <small>Valores recebidos</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card bg-danger text-white">
+                            <div class="card-body">
+                                <h6>Total Saídas</h6>
+                                <h4 id="totalExpenses">R$ 0,00</h4>
+                                <small>Gastos e despesas</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card bg-warning text-white">
+                            <div class="card-body">
+                                <h6>A Receber</h6>
+                                <h4 id="totalPending">R$ 0,00</h4>
+                                <small>Valores pendentes</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card bg-primary text-white">
+                            <div class="card-body">
+                                <h6>Saldo Líquido</h6>
+                                <h4 id="netBalance">R$ 0,00</h4>
+                                <small>Entradas - Saídas</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <ul class="nav nav-pills" id="financialTabs" role="tablist">
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link active" id="all-transactions-tab" data-bs-toggle="pill"
+                                    data-bs-target="#all-transactions" type="button" role="tab">
+                                    Todas
+                                </button>
+                            </li>
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link" id="income-tab" data-bs-toggle="pill" data-bs-target="#income"
+                                    type="button" role="tab">
+                                    Entradas
+                                </button>
+                            </li>
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link" id="expenses-tab" data-bs-toggle="pill"
+                                    data-bs-target="#expenses" type="button" role="tab">
+                                    Saídas
+                                </button>
+                            </li>
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link" id="pending-tab" data-bs-toggle="pill"
+                                    data-bs-target="#pending" type="button" role="tab">
+                                    Pendentes
+                                </button>
+                            </li>
+                        </ul>
+                    </div>
+                    <div class="card-body">
+                        <div class="tab-content" id="financialTabContent">
+                            <div class="tab-pane fade show active" id="all-transactions" role="tabpanel">
+                                <div class="table-responsive">
+                                    <table class="table table-striped">
+                                        <thead>
+                                            <tr>
+                                                <th>Data</th>
+                                                <th>Tipo</th>
+                                                <th>Categoria</th>
+                                                <th>Descrição</th>
+                                                <th>Cliente</th>
+                                                <th>Valor</th>
+                                                <th>Status</th>
+                                                <th>Ação</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="allTransactionsTable">
+                                            <!-- Transações serão carregadas aqui -->
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                            <div class="tab-pane fade" id="income" role="tabpanel">
+                                <div class="table-responsive">
+                                    <table class="table table-striped">
+                                        <thead>
+                                            <tr>
+                                                <th>Data</th>
+                                                <th>Categoria</th>
+                                                <th>Descrição</th>
+                                                <th>Cliente</th>
+                                                <th>Valor</th>
+                                                <th>Status</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="incomeTable">
+                                            <!-- Entradas serão carregadas aqui -->
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                            <div class="tab-pane fade" id="expenses" role="tabpanel">
+                                <div class="table-responsive">
+                                    <table class="table table-striped">
+                                        <thead>
+                                            <tr>
+                                                <th>Data</th>
+                                                <th>Categoria</th>
+                                                <th>Descrição</th>
+                                                <th>Valor</th>
+                                                <th>Status</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="expensesTable">
+                                            <!-- Saídas serão carregadas aqui -->
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                            <div class="tab-pane fade" id="pending" role="tabpanel">
+                                <div class="table-responsive">
+                                    <table class="table table-striped">
+                                        <thead>
+                                            <tr>
+                                                <th>Data</th>
+                                                <th>Categoria</th>
+                                                <th>Descrição</th>
+                                                <th>Cliente</th>
+                                                <th>Valor</th>
+                                                <th>Status</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="pendingTable">
+                                            <!-- Pendentes serão carregadas aqui -->
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modals -->
+    <!-- Service Modal -->
+    <div class="modal fade" id="serviceModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Cadastrar Novo Serviço</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="serviceForm">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="customerName" class="form-label">Nome do Cliente</label>
+                                    <input type="text" class="form-control" id="customerName" required>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="customerPhone" class="form-label">Telefone</label>
+                                    <input type="tel" class="form-control" id="customerPhone" required>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="device" class="form-label">Aparelho</label>
+                                    <input type="text" class="form-control" id="device" required>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="serviceValue" class="form-label">Valor (R$)</label>
+                                    <input type="number" class="form-control" id="serviceValue" step="0.01" required>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="problem" class="form-label">Problema/Serviço</label>
+                            <input type="text" class="form-control" id="problem" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="deliveryDate" class="form-label">Data de Entrega Prevista</label>
+                            <input type="date" class="form-control" id="deliveryDate">
+                        </div>
+                        <div class="mb-3">
+                            <label for="serviceNotes" class="form-label">Observações</label>
+                            <textarea class="form-control" id="serviceNotes" rows="3"></textarea>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Peças Utilizadas (Opcional)</label>
+                            <select class="form-select mb-2" id="partSelect">
+                                <option value="">Selecione uma peça para adicionar</option>
+                            </select>
+                            <div id="selectedParts"></div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-primary" id="saveServiceBtn">Cadastrar Serviço</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Sale Modal -->
+    <div class="modal fade" id="saleModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Registrar Nova Venda</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="saleForm">
+                        <div class="mb-3">
+                            <label class="form-label">Tipo de Venda</label>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="saleType" id="stockSale"
+                                    value="stock" checked>
+                                <label class="form-check-label" for="stockSale">
+                                    Aparelho do Estoque
+                                </label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="saleType" id="externalSale"
+                                    value="external">
+                                <label class="form-check-label" for="externalSale">
+                                    Aparelho Externo
+                                </label>
+                            </div>
+                        </div>
+
+                        <div id="stockSaleFields">
+                            <div class="mb-3">
+                                <label for="stockDeviceSelect" class="form-label">Selecionar Aparelho do Estoque</label>
+                                <select class="form-select" id="stockDeviceSelect">
+                                    <option value="">Selecione um aparelho</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div id="externalSaleFields" style="display: none;">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="brand" class="form-label">Marca</label>
+                                        <input type="text" class="form-control" id="brand">
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="model" class="form-label">Modelo</label>
+                                        <input type="text" class="form-control" id="model">
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="storage" class="form-label">Armazenamento</label>
+                                        <input type="text" class="form-control" id="storage">
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="condition" class="form-label">Estado</label>
+                                        <select class="form-select" id="condition">
+                                            <option value="novo">Novo</option>
+                                            <option value="usado">Seminovo</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="purchasePrice" class="form-label">Preço de Compra (R$)</label>
+                                        <input type="number" class="form-control" id="purchasePrice" step="0.01">
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="salePrice" class="form-label">Preço de Venda (R$)</label>
+                                        <input type="number" class="form-control" id="salePrice" step="0.01">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="saleCustomerName" class="form-label">Nome do Cliente (Opcional)</label>
+                            <input type="text" class="form-control" id="saleCustomerName">
+                        </div>
+                        <div class="mb-3">
+                            <label for="saleNotes" class="form-label">Observações</label>
+                            <textarea class="form-control" id="saleNotes" rows="3"></textarea>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-primary" id="saveSaleBtn">Registrar Venda</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Stock Modal -->
+    <div class="modal fade" id="stockModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Cadastrar Novo Item</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="stockForm">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="itemName" class="form-label">Nome do Item</label>
+                                    <input type="text" class="form-control" id="itemName" required>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="category" class="form-label">Categoria</label>
+                                    <select class="form-select" id="category" required>
+                                        <option value="">Selecione a categoria</option>
+                                        <option value="tela">Tela</option>
+                                        <option value="bateria">Bateria</option>
+                                        <option value="carregador">Carregador</option>
+                                        <option value="cabo">Cabo</option>
+                                        <option value="fone">Fone</option>
+                                        <option value="capa">Capa</option>
+                                        <option value="pelicula">Película</option>
+                                        <option value="aparelho">Aparelho</option>
+                                        <option value="ferramenta">Ferramenta</option>
+                                        <option value="outros">Outros</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-3">
+                                <div class="mb-3">
+                                    <label for="state" class="form-label">Estado</label>
+                                    <select class="form-select" id="state" required>
+                                        <option value="">Selecione a estado</option>
+                                        <option value="novo">Novo</option>
+                                        <option value="usado">Semi novo</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-5">
+                                <div class="mb-3">
+                                    <label for="itemBrand" class="form-label">Marca (Opcional)</label>
+                                    <input type="text" class="form-control" id="itemBrand">
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    <label for="itemModel" class="form-label">Modelo (Opcional)</label>
+                                    <input type="text" class="form-control" id="itemModel">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    <label for="quantity" class="form-label">Quantidade</label>
+                                    <input type="number" class="form-control" id="quantity" required>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    <label for="purchasePriceStock" class="form-label">Preço Compra</label>
+                                    <input type="number" class="form-control" id="purchasePriceStock" required>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    <label for="salePriceStock" class="form-label">Preço Venda</label>
+                                    <input type="number" class="form-control" id="salePriceStock" step="0.01" required>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="supplier" class="form-label">Fornecedor (Opcional)</label>
+                                    <input type="text" class="form-control" id="supplier">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="location" class="form-label">Localização (Opcional)</label>
+                                    <input type="text" class="form-control" id="location">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="stockNotes" class="form-label">Observações</label>
+                            <textarea class="form-control" id="stockNotes" rows="3"></textarea>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-primary" id="saveStockBtn">Cadastrar Item</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Stock Update Modal -->
+    <div class="modal fade" id="stockUpdateModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Atualizar Estoque</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="stockUpdateForm">
+                        <input type="hidden" id="updateItemId">
+                        <div class="mb-3">
+                            <label class="form-label">Tipo de Movimentação</label>
+                            <select class="form-select" id="movementType">
+                                <option value="add">Entrada (Adicionar)</option>
+                                <option value="remove">Saída (Remover)</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="movementQuantity" class="form-label">Quantidade</label>
+                            <input type="number" class="form-control" id="movementQuantity" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="movementReason" class="form-label">Motivo</label>
+                            <input type="text" class="form-control" id="movementReason"
+                                placeholder="Compra, venda, uso em serviço...">
+                        </div>
+                        <div id="currentQuantityInfo" class="text-muted small"></div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-primary" id="updateStockBtn">Atualizar Estoque</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Transaction Modal -->
+    <div class="modal fade" id="transactionModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Registrar Nova Transação</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="transactionForm">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="type" class="form-label">Tipo</label>
+                                    <select class="form-select" id="type" required>
+                                        <option value="">Selecione o tipo</option>
+                                        <option value="entrada">Entrada</option>
+                                        <option value="saida">Saída</option>
+                                        <option value="pendente">Pendente</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="transactionCategory" class="form-label">Categoria</label>
+                                    <select class="form-select" id="transactionCategory" required>
+                                        <option value="">Selecione a categoria</option>
+                                        <option value="servico">Serviço</option>
+                                        <option value="venda">Venda</option>
+                                        <option value="compra">Compra*</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="transactionDescription" class="form-label">Descrição (Opcional)</label>
+                                    <input type="text" class="form-control" id="transactionDescription">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="transactionCustomerName" class="form-label">Cliente (Opcional)</label>
+                                    <input type="text" class="form-control" id="transactionCustomerName">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="value" class="form-label">Valor (R$)</label>
+                                    <input type="number" class="form-control" id="value" step="0.01">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <br/>
+                                    <p>* selecione o tipo <strong>Compra</strong> apenas se for categoria <strong>Saída</strong></p>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-primary" id="saveTransactionBtn">Registrar Transação</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script type="module" src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script type="module" src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script type="module" src="js/database.js"></script>
+    <script type="module" src="js/app.js"></script>
+</body>
+
+</html>

@@ -1,0 +1,417 @@
+/* TechCell Manager - Enhanced Styling */
+:root {
+    --primary: #4361ee;
+    --primary-dark: #3a56d4;
+    --secondary: #4cc9f0;
+    --success: #06d6a0;
+    --danger: #ef476f;
+    --warning: #ffd166;
+    --info: #118ab2;
+    --dark: #073b4c;
+    --light: #f8f9fa;
+    --gray: #6c757d;
+    --border-radius: 0.5rem;
+    --box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.08);
+    --transition: all 0.3s ease;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #f5f7fa;
+    color: #495057;
+    line-height: 1.6;
+}
+
+/* Header styling */
+header.bg-primary {
+    background: linear-gradient(135deg, var(--primary), var(--primary-dark)) !important;
+    box-shadow: var(--box-shadow);
+    border-radius: 0 0 var(--border-radius) var(--border-radius);
+    padding: 1.25rem 1.5rem !important;
+}
+
+header h1 {
+    font-weight: 600;
+    margin-bottom: 0.25rem;
+}
+
+/* Navigation tabs */
+.nav-tabs {
+    border-bottom: none;
+    gap: 0.25rem;
+    margin-bottom: 1.5rem !important;
+}
+
+.nav-tabs .nav-link {
+    border: none;
+    color: var(--gray);
+    font-weight: 500;
+    padding: 0.75rem 1.25rem;
+    border-radius: var(--border-radius);
+    transition: var(--transition);
+}
+
+.nav-tabs .nav-link:hover {
+    background-color: rgba(67, 97, 238, 0.1);
+    color: var(--primary);
+}
+
+.nav-tabs .nav-link.active {
+    background-color: var(--primary);
+    color: white;
+    box-shadow: 0 4px 6px rgba(67, 97, 238, 0.2);
+}
+
+.nav-tabs .nav-link i {
+    margin-right: 0.5rem;
+}
+
+/* Card styling */
+.card {
+    border: none;
+    box-shadow: var(--box-shadow);
+    border-radius: var(--border-radius);
+    transition: var(--transition);
+    margin-bottom: 1.5rem;
+    overflow: hidden;
+}
+
+.card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 0.75rem 1.5rem rgba(0, 0, 0, 0.12);
+}
+
+.card-header {
+    background-color: white;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+    padding: 1.25rem 1.5rem;
+}
+
+.card-header h5 {
+    font-weight: 600;
+    margin-bottom: 0;
+    color: var(--dark);
+}
+
+.card-body {
+    padding: 1.5rem;
+}
+
+/* Dashboard cards */
+.bg-success {
+    background: linear-gradient(135deg, var(--success), #05b384) !important;
+}
+
+.bg-info {
+    background: linear-gradient(135deg, var(--info), #0e7490) !important;
+}
+
+.bg-warning {
+    background: linear-gradient(135deg, var(--warning), #ffc233) !important;
+}
+
+.bg-danger {
+    background: linear-gradient(135deg, var(--danger), #e02f58) !important;
+}
+
+.bg-dark {
+    background: linear-gradient(135deg, var(--dark), #052c39) !important;
+}
+
+.bg-primary {
+    background: linear-gradient(135deg, var(--primary), var(--primary-dark)) !important;
+}
+
+.card.bg-success,
+.card.bg-info,
+.card.bg-warning,
+.card.bg-danger,
+.card.bg-dark,
+.card.bg-primary {
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+}
+
+.card.bg-success:hover,
+.card.bg-info:hover,
+.card.bg-warning:hover,
+.card.bg-danger:hover,
+.card.bg-dark:hover,
+.card.bg-primary:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 0.75rem 1.5rem rgba(0, 0, 0, 0.2);
+}
+
+.card.bg-success .card-body,
+.card.bg-info .card-body,
+.card.bg-warning .card-body,
+.card.bg-danger .card-body,
+.card.bg-dark .card-body,
+.card.bg-primary .card-body {
+    padding: 1.75rem;
+}
+
+.card.bg-warning {
+    color: #073b4c !important;
+}
+
+.card.bg-warning small {
+    color: rgba(7, 59, 76, 0.8) !important;
+}
+
+.card h4 {
+    font-size: 1.75rem;
+    font-weight: 700;
+    margin: 0.5rem 0;
+}
+
+.card h6 {
+    font-size: 0.875rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 0.5rem;
+    opacity: 0.9;
+}
+
+.card small {
+    opacity: 0.8;
+}
+
+.card i.fs-1 {
+    opacity: 0.8;
+    font-size: 2.5rem !important;
+}
+
+/* Table styling */
+.table {
+    margin-bottom: 0;
+}
+
+.table-striped>tbody>tr:nth-of-type(odd) {
+    background-color: rgba(0, 0, 0, 0.02);
+}
+
+.table th {
+    border-top: none;
+    font-weight: 600;
+    color: var(--dark);
+    background-color: rgba(0, 0, 0, 0.02);
+    padding: 1rem 1.25rem;
+    white-space: nowrap;
+}
+
+.table td {
+    padding: 1rem 1.25rem;
+    vertical-align: middle;
+}
+
+.table-responsive {
+    border-radius: var(--border-radius);
+    overflow: hidden;
+}
+
+/* Form controls */
+.form-control,
+.form-select {
+    padding: 0.625rem 1rem;
+    border-radius: var(--border-radius);
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    font-size: 0.95rem;
+    transition: var(--transition);
+}
+
+.form-control:focus,
+.form-select:focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 0.25rem rgba(67, 97, 238, 0.25);
+}
+
+.form-label {
+    font-weight: 500;
+    margin-bottom: 0.5rem;
+    color: var(--dark);
+}
+
+/* Buttons */
+.btn {
+    padding: 0.625rem 1.25rem;
+    font-weight: 500;
+    border-radius: var(--border-radius);
+    transition: var(--transition);
+}
+
+.btn-primary {
+    background-color: var(--primary);
+    border-color: var(--primary);
+}
+
+.btn-primary:hover,
+.btn-primary:focus {
+    background-color: var(--primary-dark);
+    border-color: var(--primary-dark);
+    box-shadow: 0 0.25rem 0.5rem rgba(67, 97, 238, 0.3);
+}
+
+.btn-secondary {
+    background-color: #e9ecef;
+    border-color: #e9ecef;
+    color: var(--dark);
+}
+
+.btn-secondary:hover,
+.btn-secondary:focus {
+    background-color: #dee2e6;
+    border-color: #dee2e6;
+    color: var(--dark);
+}
+
+/* Modal styling */
+.modal-content {
+    border: none;
+    border-radius: var(--border-radius);
+    overflow: hidden;
+}
+
+.modal-header {
+    background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+    color: white;
+    padding: 1.25rem 1.5rem;
+    border-bottom: none;
+}
+
+.modal-header .btn-close {
+    filter: brightness(0) invert(1);
+    opacity: 0.8;
+}
+
+.modal-body {
+    padding: 1.75rem;
+}
+
+.modal-footer {
+    padding: 1.25rem 1.5rem;
+    border-top: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+/* Financial tab pills */
+.nav-pills .nav-link {
+    border-radius: var(--border-radius);
+    padding: 0.5rem 1.25rem;
+    font-weight: 500;
+    color: var(--gray);
+}
+
+.nav-pills .nav-link.active {
+    background-color: var(--primary);
+    color: white;
+}
+
+/* Responsive adjustments */
+@media (max-width: 992px) {
+    .card h4 {
+        font-size: 1.5rem;
+    }
+
+    .card i.fs-1 {
+        font-size: 2rem !important;
+    }
+}
+
+@media (max-width: 768px) {
+    .container-fluid {
+        padding: 0.75rem;
+    }
+
+    header {
+        padding: 1rem !important;
+    }
+
+    .card-body {
+        padding: 1.25rem;
+    }
+
+    .table th,
+    .table td {
+        padding: 0.75rem 1rem;
+    }
+
+    .nav-tabs .nav-link {
+        padding: 0.5rem 0.75rem;
+        font-size: 0.9rem;
+    }
+
+    .nav-tabs .nav-link i {
+        margin-right: 0.25rem;
+    }
+
+    .modal-body {
+        padding: 1.25rem;
+    }
+}
+
+@media (max-width: 576px) {
+    header h1 {
+        font-size: 1.25rem;
+    }
+
+    header small {
+        font-size: 0.8rem;
+    }
+
+    .card h4 {
+        font-size: 1.25rem;
+    }
+
+    .card h6 {
+        font-size: 0.8rem;
+    }
+
+    .card i.fs-1 {
+        font-size: 1.75rem !important;
+    }
+
+    .nav-tabs {
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        padding-bottom: 0.5rem;
+    }
+
+    .nav-tabs .nav-link {
+        white-space: nowrap;
+    }
+}
+
+/* Additional elegant touches */
+#currentDate {
+    font-size: 0.9rem;
+    opacity: 0.9;
+}
+
+.form-check-input:checked {
+    background-color: var(--primary);
+    border-color: var(--primary);
+}
+
+/* Status badges */
+.badge {
+    padding: 0.5rem 0.75rem;
+    font-weight: 500;
+    border-radius: 2rem;
+}
+
+/* Animations */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.tab-pane.active {
+    animation: fadeIn 0.3s ease-out;
+}
