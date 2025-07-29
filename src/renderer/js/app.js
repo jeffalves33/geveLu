@@ -489,10 +489,11 @@ function loadPartsOptions() {
     partSelect.innerHTML = '<option value="">Selecione uma peça para adicionar</option>'
 
     const parts = stock.filter((item) => item.category !== "aparelho")
+    
     parts.forEach((part) => {
         const option = document.createElement("option")
         option.value = part.id
-        option.textContent = `${part.name} - ${formatCurrency(part.unit_price)}`
+        option.textContent = `${part.name} - ${formatCurrency(part.sale_price)}`
         partSelect.appendChild(option)
     })
 }
