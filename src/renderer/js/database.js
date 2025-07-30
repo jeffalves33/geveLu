@@ -94,6 +94,23 @@ class Database {
         }
     }
 
+    async deleteService(id) {
+        try {
+            const { data, error } = await supabase
+                .from("services")
+                .delete()
+                .eq("id", id)
+                .select()
+
+            if (error) throw error
+
+            return data[0]
+        } catch (error) {
+            console.error("Error deleting service:", error)
+            throw error
+        }
+    }
+
     // Vendas
     async getSales() {
         try {
@@ -133,6 +150,38 @@ class Database {
             return data[0]
         } catch (error) {
             console.error("Error creating sale:", error)
+            throw error
+        }
+    }
+
+    async deleteSale(id) {
+        try {
+            const { data, error } = await supabase
+                .from("sales")
+                .delete()
+                .eq("id", id)
+                .select()
+
+            if (error) throw error
+            return data[0]
+        } catch (error) {
+            console.error("Error deleting sale:", error)
+            throw error
+        }
+    }
+
+    async updateSale(id, updates) {
+        try {
+            const { data, error } = await supabase
+                .from("sales")
+                .update(updates)
+                .eq("id", id)
+                .select()
+
+            if (error) throw error
+            return data[0]
+        } catch (error) {
+            console.error("Error updating sale:", error)
             throw error
         }
     }
@@ -221,6 +270,52 @@ class Database {
         }
     }
 
+    async updateStockItem(id, updates) {
+        try {
+            const { data, error } = await supabase
+                .from("stock")
+                .update(updates)
+                .eq("id", id)
+                .select()
+
+            if (error) throw error
+            return data[0]
+        } catch (error) {
+            console.error("Error updating stock item:", error)
+            throw error
+        }
+    }
+
+    async deleteStockItem(id) {
+        try {
+            const { data: stock_movementsData, error: stock_movementsError } = await supabase
+                .from("stock_movements")
+                .delete()
+                .eq("stock_id", id)
+                .select()
+
+            if (stock_movementsError) throw error
+
+        } catch (error) {
+            console.error("Error deleting stockstock_movements item:", stock_movementsError)
+            throw error
+        }
+
+        try {
+            const { data, error } = await supabase
+                .from("stock")
+                .delete()
+                .eq("id", id)
+                .select()
+
+            if (error) throw error
+            return data[0]
+        } catch (error) {
+            console.error("Error deleting stock item:", error)
+            throw error
+        }
+    }
+
     // Transações
     async getTransactions() {
         try {
@@ -294,6 +389,38 @@ class Database {
             return data[0]
         } catch (error) {
             console.error("Error updating transaction status:", error)
+            throw error
+        }
+    }
+
+    async deleteTransaction(id) {
+        try {
+            const { data, error } = await supabase
+                .from("transactions")
+                .delete()
+                .eq("id", id)
+                .select()
+
+            if (error) throw error
+            return data[0]
+        } catch (error) {
+            console.error("Error deleting transaction:", error)
+            throw error
+        }
+    }
+
+    async updateTransactionItem(id, updates) {
+        try {
+            const { data, error } = await supabase
+                .from("transactions")
+                .update(updates)
+                .eq("id", id)
+                .select()
+
+            if (error) throw error
+            return data[0]
+        } catch (error) {
+            console.error("Error updating transaction:", error)
             throw error
         }
     }
