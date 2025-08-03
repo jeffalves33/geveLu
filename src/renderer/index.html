@@ -4,27 +4,34 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TechCell Manager</title>
+    <title>Modaltech</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
     <link href="css/styles.css" rel="stylesheet">
+    <style>
+        .product-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+            transition: all 0.2s ease;
+        }
+
+        .product-card {
+            transition: all 0.2s ease;
+        }
+
+        #toastContainer .toast {
+            min-width: 250px;
+        }
+
+        .cart-item {
+            border-left: 3px solid #007bff;
+            padding-left: 10px;
+        }
+    </style>
 </head>
 
 <body>
     <div class="container-fluid">
-        <!-- Header -->
-        <header class="bg-primary text-white p-3 mb-4">
-            <div class="d-flex justify-content-between align-items-center">
-                <div>
-                    <h1 class="h3 mb-0">TechCell Manager</h1>
-                    <small>Controle completo do seu negócio de conserto de celulares</small>
-                </div>
-                <div class="text-end">
-                    <small id="currentDate"></small>
-                </div>
-            </div>
-        </header>
-
         <!-- Navigation Tabs -->
         <ul class="nav nav-tabs mb-4" id="mainTabs" role="tablist">
             <li class="nav-item" role="presentation">
@@ -55,6 +62,12 @@
                 <button class="nav-link" id="financial-tab" data-bs-toggle="tab" data-bs-target="#financial"
                     type="button" role="tab">
                     <i class="bi bi-currency-dollar"></i> Financeiro
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="pdv-tab" data-bs-toggle="tab" data-bs-target="#pdv" type="button"
+                    role="tab">
+                    <i class="bi bi-calculator"></i> PDV
                 </button>
             </li>
         </ul>
@@ -516,6 +529,168 @@
                     </div>
                 </div>
             </div>
+
+            <!-- PDV Tab -->
+            <div class="tab-pane fade" id="pdv" role="tabpanel">
+                <!-- Campo de código do produto -->
+                <div class="card mb-3">
+                    <div class="card-body">
+                        <div class="row align-items-center">
+                            <div class="col-md-8">
+                                <label for="productCode" class="form-label mb-0">
+                                    <i class="bi bi-upc-scan"></i> Código do Produto
+                                </label>
+                                <small class="text-muted d-block">Digite o código e pressione Enter para
+                                    adicionar</small>
+                            </div>
+                            <div class="col-md-4">
+                                <input type="text" class="form-control" id="productCode" placeholder="Código..."
+                                    autocomplete="off">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <!-- Painel de Produtos -->
+                    <div class="col-md-8">
+                        <div class="card">
+                            <div class="card-header">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <h5>Produtos Disponíveis</h5>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <input type="text" class="form-control" id="pdvSearch"
+                                            placeholder="Buscar produtos...">
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="card-body">
+                                <div class="row g-2" id="productsGrid">
+                                    <!-- Produtos serão carregados aqui dinamicamente -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Carrinho de Compras -->
+                    <div class="col-md-4">
+                        <div class="card h-100">
+                            <div class="card-header d-flex justify-content-between align-items-center">
+                                <h5 class="mb-0">Carrinho</h5>
+                                <button class="btn btn-sm btn-outline-danger" id="clearCart">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </div>
+                            <div class="card-body d-flex flex-column">
+                                <!-- Lista de itens do carrinho -->
+                                <div class="flex-grow-1 mb-3" style="max-height: 400px; overflow-y: auto;">
+                                    <div id="cartItems">
+                                        <div class="text-center text-muted py-4">
+                                            <i class="bi bi-cart fs-1"></i>
+                                            <p>Carrinho vazio</p>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Informações do cliente -->
+                                <div class="mb-3">
+                                    <label for="pdvCustomerName" class="form-label">Cliente (Opcional)</label>
+                                    <input type="text" class="form-control form-control-sm" id="pdvCustomerName"
+                                        placeholder="Nome do cliente">
+                                </div>
+
+                                <!-- Resumo do pedido -->
+                                <div class="border-top pt-3">
+                                    <div class="d-flex justify-content-between mb-2">
+                                        <span>Subtotal:</span>
+                                        <span id="cartSubtotal">R$ 0,00</span>
+                                    </div>
+                                    <div class="d-flex justify-content-between mb-2">
+                                        <span>Desconto:</span>
+                                        <div class="input-group input-group-sm" style="width: 100px;">
+                                            <input type="number" class="form-control" id="discountPercent"
+                                                placeholder="%" min="0" max="100">
+                                            <span class="input-group-text">%</span>
+                                        </div>
+                                    </div>
+                                    <div class="d-flex justify-content-between mb-3 fw-bold fs-5">
+                                        <span>Total:</span>
+                                        <span id="cartTotal">R$ 0,00</span>
+                                    </div>
+
+                                    <!-- Forma de pagamento -->
+                                    <div class="mb-3">
+                                        <label class="form-label">Forma de Pagamento</label>
+                                        <select class="form-select form-select-sm" id="paymentMethod">
+                                            <option value="dinheiro">Dinheiro</option>
+                                            <option value="cartao">Cartão</option>
+                                            <option value="pix">PIX</option>
+                                            <option value="transferencia">Transferência</option>
+                                        </select>
+                                    </div>
+
+                                    <!-- Botões de ação -->
+                                    <div class="d-grid gap-2">
+                                        <button class="btn btn-success" id="finalizeSale" disabled>
+                                            <i class="bi bi-check-circle"></i> Finalizar Venda
+                                        </button>
+                                        <button class="btn btn-outline-primary btn-sm" id="printReceipt" disabled>
+                                            <i class="bi bi-printer"></i> Imprimir Recibo
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Histórico de vendas do dia -->
+                <div class="row mt-4">
+                    <div class="col-12">
+                        <div class="card">
+                            <div class="card-header">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <h5>Vendas do Dia</h5>
+                                    </div>
+                                    <div class="col-md-6 text-end">
+                                        <div class="row g-2">
+                                            <div class="col-auto">
+                                                <small class="text-muted">Total do dia:</small>
+                                                <strong id="todayTotal">R$ 0,00</strong>
+                                            </div>
+                                            <div class="col-auto">
+                                                <small class="text-muted">Vendas:</small>
+                                                <strong id="todayCount">0</strong>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="card-body">
+                                <div class="table-responsive">
+                                    <table class="table table-sm">
+                                        <thead>
+                                            <tr>
+                                                <th>Hora</th>
+                                                <th>Cliente</th>
+                                                <th>Itens</th>
+                                                <th>Total</th>
+                                                <th>Pagamento</th>
+                                                <th>Ações</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="todaySalesTable">
+                                            <!-- Vendas do dia serão carregadas aqui -->
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -701,13 +876,19 @@
                 <div class="modal-body">
                     <form id="stockForm">
                         <div class="row">
-                            <div class="col-md-6">
+                            <div class="col-md-5">
                                 <div class="mb-3">
                                     <label for="itemName" class="form-label">Nome do Item</label>
                                     <input type="text" class="form-control" id="itemName" required>
                                 </div>
                             </div>
-                            <div class="col-md-6">
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    <label for="itemCode" class="form-label">Código</label>
+                                    <input type="text" class="form-control" id="itemCode">
+                                </div>
+                            </div>
+                            <div class="col-md-3">
                                 <div class="mb-3">
                                     <label for="category" class="form-label">Categoria</label>
                                     <select class="form-select" id="category" required>
@@ -894,8 +1075,10 @@
                             </div>
                             <div class="col-md-6">
                                 <div class="mb-3">
-                                    <br/>
-                                    <p>* selecione o tipo <strong>Compra</strong> apenas se for categoria <strong>Saída</strong></p>
+                                    <br />
+                                    <p>* selecione o tipo <strong>Compra</strong> apenas se for categoria
+                                        <strong>Saída</strong>
+                                    </p>
                                 </div>
                             </div>
                         </div>

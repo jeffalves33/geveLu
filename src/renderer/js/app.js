@@ -1,3 +1,4 @@
+// Arquivo: src/renderer/js/app.js
 import { db } from './database.js'
 
 // Variáveis globais
@@ -6,6 +7,8 @@ let sales = []
 let stock = []
 let transactions = []
 let selectedParts = []
+let cart = []
+let currentSale = null
 
 // Inicialização da aplicação
 document.addEventListener("DOMContentLoaded", () => {
@@ -15,13 +18,17 @@ document.addEventListener("DOMContentLoaded", () => {
 
 async function initializeApp() {
     // Mostrar data atual
-    document.getElementById("currentDate").textContent = new Date().toLocaleDateString("pt-BR")
+    //document.getElementById("currentDate").textContent = new Date().toLocaleDateString("pt-BR")
 
     // Carregar dados
     await loadAllData()
 
     // Atualizar dashboard
     updateDashboard()
+
+    if (document.querySelector('#pdv-tab.active')) {
+        initializePDV()
+    }
 }
 
 function setupEventListeners() {
@@ -81,6 +88,11 @@ function setupEventListeners() {
     });
 
     document.addEventListener('click', function (e) {
+        if (e.target.classList.contains('service-listener-PDV')) {
+            const serviceId = e.target.getAttribute('data-service-id');
+            addToCart(serviceId)
+        }
+
         if (e.target.classList.contains('edit-service')) {
             const serviceId = e.target.getAttribute('data-service-id');
             updateService(serviceId)
@@ -144,6 +156,8 @@ function setupEventListeners() {
             deleteTransaction(transactionId);
         }
     });
+
+    initializePDV()
 }
 
 async function loadAllData() {
@@ -720,7 +734,7 @@ async function saveService() {
             }
         }
 
-        alert(errorMessage);
+        console.log(errorMessage);
     }
 }
 
@@ -808,7 +822,6 @@ async function saveSale() {
 
     } catch (error) {
         console.error("Error saving sale:", error)
-        alert("Erro ao registrar venda. Tente novamente.")
     }
 }
 
@@ -864,7 +877,6 @@ async function saveTransaction() {
 
     } catch (error) {
         console.error("Error saving transaction:", error)
-        alert("Erro ao registrar transação. Tente novamente.")
     }
 }
 
@@ -878,6 +890,7 @@ async function saveStock() {
         }
 
         const name = document.getElementById("itemName").value.trim();
+        const code = document.getElementById("itemCode").value;
         const category = document.getElementById("category").value;
         const state = document.getElementById("state").value;
         const brand = document.getElementById("itemBrand").value;
@@ -924,6 +937,7 @@ async function saveStock() {
 
         const stockData = {
             name: name,
+            code: code,
             category: category,
             state: state,
             brand: brand,
@@ -1001,7 +1015,6 @@ async function updateServiceStatus(serviceId, newStatus) {
         updateFinancialTables()
     } catch (error) {
         console.error("Error updating service status:", error)
-        alert("Erro ao atualizar status do serviço.")
     }
 }
 
@@ -1012,7 +1025,6 @@ async function updateTransactionStatus(transactionId) {
         loadAllData()
     } catch (error) {
         console.error("Error updating service status:", error)
-        alert("Erro ao atualizar status do serviço.")
     }
 }
 
@@ -1061,7 +1073,6 @@ async function updateStock() {
 
     } catch (error) {
         console.error("Error updating stock:", error)
-        alert("Erro ao atualizar estoque. Tente novamente.")
     }
 }
 
@@ -1070,7 +1081,7 @@ function generateServicePDF(serviceId) {
         // Encontrar o serviço
         const service = services.find(s => s.id == serviceId);
         if (!service) {
-            alert('Serviço não encontrado');
+            console.log('Serviço não encontrado');
             return;
         }
 
@@ -1144,7 +1155,6 @@ function generateServicePDF(serviceId) {
 
     } catch (error) {
         console.error('Erro ao gerar PDF:', error);
-        alert('Erro ao gerar PDF. Verifique se as bibliotecas estão carregadas.');
     }
 }
 
@@ -1154,7 +1164,7 @@ function updateService(serviceId) {
         // Encontrar o serviço
         const service = services.find(s => s.id == serviceId);
         if (!service) {
-            alert('Serviço não encontrado');
+            console.log('Serviço não encontrado');
             return;
         }
 
@@ -1190,7 +1200,6 @@ function updateService(serviceId) {
 
     } catch (error) {
         console.error('Erro ao carregar dados do serviço:', error);
-        alert('Erro ao carregar dados do serviço');
     }
 }
 
@@ -1200,7 +1209,7 @@ async function deleteService(serviceId) {
         // Encontrar o serviço
         const service = services.find(s => s.id == serviceId);
         if (!service) {
-            alert('Serviço não encontrado');
+            console.log('Serviço não encontrado');
             return;
         }
 
@@ -1283,9 +1292,6 @@ async function deleteService(serviceId) {
                 // Reabilitar o botão
                 deleteBtn.disabled = false;
                 deleteBtn.innerHTML = originalText;
-
-                // Mostrar mensagem de erro
-                alert('Erro ao excluir serviço. Tente novamente.');
             }
         });
 
@@ -1299,7 +1305,6 @@ async function deleteService(serviceId) {
 
     } catch (error) {
         console.error('Erro ao excluir serviço:', error);
-        alert('Erro ao excluir serviço');
     }
 }
 
@@ -1669,6 +1674,7 @@ async function updateStockItem(stockId) {
 
         // Preencher os campos do formulário
         document.getElementById('itemName').value = item.name || '';
+        document.getElementById('itemCode').value = item.code || '';
         document.getElementById('category').value = item.category || '';
         document.getElementById('state').value = item.state || '';
         document.getElementById('itemBrand').value = item.brand || '';
@@ -2144,4 +2150,677 @@ function removePartFromService(partId) {
 function analyzeProfit(value) {
     if (value > 0) return `<p class="text-success">${formatCurrency(value)}</p>`
     return `<p class="text-danger">${formatCurrency(value)}</p>`
+}
+
+// Função para inicializar o PDV
+function initializePDV() {
+    loadProductsGrid()
+    updateCartDisplay()
+    updateTodaysSales()
+    setupPDVEventListeners()
+}
+
+// Setup dos event listeners específicos do PDV
+function setupPDVEventListeners() {
+    // Busca de produtos
+    const pdvSearch = document.getElementById("pdvSearch")
+    if (pdvSearch) {
+        pdvSearch.addEventListener("input", function() {
+            filterProducts(this.value)
+        })
+    }
+
+    // Campo de código (Enter para adicionar produto)
+    const codeInput = document.getElementById("productCode")
+    if (codeInput) {
+        codeInput.focus() //manter sempre em foco
+        codeInput.addEventListener("keypress", function(e) {
+            if (e.key === "Enter") {
+                e.preventDefault()
+                addProductByCode(this.value)
+                this.value = ""
+            }
+        })
+    }
+
+    // Limpar carrinho
+    const clearCartBtn = document.getElementById("clearCart")
+    if (clearCartBtn) {
+        clearCartBtn.addEventListener("click", clearCart)
+    }
+
+    // Desconto
+    const discountInput = document.getElementById("discountPercent")
+    if (discountInput) {
+        discountInput.addEventListener("input", updateCartTotals)
+    }
+
+    // Finalizar venda
+    const finalizeSaleBtn = document.getElementById("finalizeSale")
+    if (finalizeSaleBtn) {
+        finalizeSaleBtn.addEventListener("click", finalizeSale)
+    }
+
+    // Imprimir recibo
+    const printReceiptBtn = document.getElementById("printReceipt")
+    if (printReceiptBtn) {
+        printReceiptBtn.addEventListener("click", printLastReceipt)
+    }
+}
+
+// Carregar produtos no grid
+function loadProductsGrid() {
+    const grid = document.getElementById("productsGrid")
+    if (!grid) return
+
+    grid.innerHTML = ""
+
+    // Filtrar apenas produtos disponíveis (quantidade > 0)
+    const availableProducts = stock.filter(item => item.quantity > 0)
+
+    if (availableProducts.length === 0) {
+        grid.innerHTML = `
+            <div class="col-12 text-center text-muted py-4">
+                <i class="bi bi-box fs-1"></i>
+                <p>Nenhum produto disponível</p>
+            </div>
+        `
+        return
+    }
+
+    availableProducts.forEach(product => {
+        const productCard = createProductCard(product)
+        grid.appendChild(productCard)
+    })
+}
+
+// Criar card de produto
+function createProductCard(product) {
+    const col = document.createElement("div")
+    col.className = "col-md-6 col-lg-4 mb-2"
+
+    const isLowStock = product.quantity <= 5
+    const stockBadge = isLowStock ? 
+        `<span class="badge bg-warning text-dark">Estoque baixo</span>` :
+        `<span class="badge bg-success">${product.quantity} disponível</span>`
+
+    col.innerHTML = `
+        <div class="card h-100 product-card service-listener-PDV" style="cursor: pointer;" data-service-id="${product.id}">
+            <div class="card-body p-2">
+                <div class="d-flex justify-content-between align-items-start mb-1">
+                    <h6 class="card-title mb-0 text-truncate" title="${product.name}">
+                        ${product.name}
+                    </h6>
+                    ${stockBadge}
+                </div>
+                <p class="card-text small text-muted mb-1">
+                    ${product.brand || ''} ${product.model || ''}
+                </p>
+                <p class="card-text small mb-1">
+                    <strong>Código:</strong> ${product.code}
+                </p>
+                <div class="d-flex justify-content-between align-items-center">
+                    <span class="text-primary fw-bold">
+                        ${formatCurrency(product.sale_price)}
+                    </span>
+                    <small class="text-muted">
+                        ${product.category}
+                    </small>
+                </div>
+            </div>
+        </div>
+    `
+
+    return col
+}
+
+// Filtrar produtos
+function filterProducts(searchTerm) {
+    const products = document.querySelectorAll(".product-card")
+    const term = searchTerm.toLowerCase()
+
+    products.forEach(product => {
+        const text = product.textContent.toLowerCase()
+        const container = product.closest(".col-md-6")
+        
+        if (text.includes(term)) {
+            container.style.display = "block"
+        } else {
+            container.style.display = "none"
+        }
+    })
+}
+
+// Adicionar produto por código
+async function addProductByCode(code) {
+    if (!code.trim()) return
+
+    const product = stock.find(item => 
+        item.code.toString() === code.toString() && item.quantity > 0
+    )
+
+    if (product) {
+        addToCart(product.id)
+        showToast(`${product.name} adicionado ao carrinho`, "success")
+    } else {
+        showToast("Produto não encontrado ou sem estoque", "error")
+    }
+}
+
+// Adicionar produto ao carrinho
+function addToCart(productId) {
+    const product = stock.find(item => item.id === productId)
+    
+    if (!product || product.quantity <= 0) {
+        showToast("Produto indisponível", "error")
+        return
+    }
+
+    // Verificar se já existe no carrinho
+    const existingItem = cart.find(item => item.id === productId)
+    
+    if (existingItem) {
+        // Verificar se pode adicionar mais
+        if (existingItem.quantity >= product.quantity) {
+            showToast("Quantidade máxima atingida", "warning")
+            return
+        }
+        existingItem.quantity += 1
+    } else {
+        cart.push({
+            id: productId,
+            name: product.name,
+            code: product.code,
+            price: product.sale_price,
+            quantity: 1,
+            maxQuantity: product.quantity
+        })
+    }
+
+    updateCartDisplay()
+    updateCartTotals()
+}
+
+// Remover produto do carrinho
+function removeFromCart(productId) {
+    cart = cart.filter(item => item.id !== productId)
+    updateCartDisplay()
+    updateCartTotals()
+}
+
+// Atualizar quantidade no carrinho
+function updateCartQuantity(productId, quantity) {
+    const item = cart.find(item => item.id === productId)
+    if (!item) return
+
+    if (quantity <= 0) {
+        removeFromCart(productId)
+        return
+    }
+
+    if (quantity > item.maxQuantity) {
+        showToast("Quantidade excede o estoque", "warning")
+        return
+    }
+
+    item.quantity = quantity
+    updateCartDisplay()
+    updateCartTotals()
+}
+
+// Atualizar display do carrinho
+function updateCartDisplay() {
+    const cartItems = document.getElementById("cartItems")
+    if (!cartItems) return
+
+    if (cart.length === 0) {
+        cartItems.innerHTML = `
+            <div class="text-center text-muted py-4">
+                <i class="bi bi-cart fs-1"></i>
+                <p>Carrinho vazio</p>
+            </div>
+        `
+        document.getElementById("finalizeSale").disabled = true
+        return
+    }
+
+    let html = ""
+    cart.forEach(item => {
+        html += `
+            <div class="border-bottom pb-2 mb-2">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div class="flex-grow-1">
+                        <h6 class="mb-1 text-truncate" title="${item.name}">
+                            ${item.name}
+                        </h6>
+                        <small class="text-muted">Código: ${item.code}</small>
+                    </div>
+                    <button class="btn btn-sm btn-outline-danger ms-2" 
+                            onclick="removeFromCart(${item.id})" title="Remover">
+                        <i class="bi bi-trash"></i>
+                    </button>
+                </div>
+                <div class="d-flex justify-content-between align-items-center mt-2">
+                    <div class="input-group input-group-sm" style="width: 100px;">
+                        <button class="btn btn-outline-secondary" type="button" 
+                                onclick="updateCartQuantity(${item.id}, ${item.quantity - 1})">-</button>
+                        <input type="text" class="form-control text-center" 
+                               value="${item.quantity}" readonly>
+                        <button class="btn btn-outline-secondary" type="button" 
+                                onclick="updateCartQuantity(${item.id}, ${item.quantity + 1})">+</button>
+                    </div>
+                    <div class="text-end">
+                        <div class="fw-bold">${formatCurrency(item.price * item.quantity)}</div>
+                        <small class="text-muted">${formatCurrency(item.price)} cada</small>
+                    </div>
+                </div>
+            </div>
+        `
+    })
+
+    cartItems.innerHTML = html
+    document.getElementById("finalizeSale").disabled = false
+}
+
+// Atualizar totais do carrinho
+function updateCartTotals() {
+    const subtotal = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0)
+    const discountPercent = parseFloat(document.getElementById("discountPercent")?.value || 0)
+    const discountAmount = (subtotal * discountPercent) / 100
+    const total = subtotal - discountAmount
+
+    document.getElementById("cartSubtotal").textContent = formatCurrency(subtotal)
+    document.getElementById("cartTotal").textContent = formatCurrency(total)
+
+    // Habilitar/desabilitar botão de finalizar
+    const finalizeSaleBtn = document.getElementById("finalizeSale")
+    if (finalizeSaleBtn) {
+        finalizeSaleBtn.disabled = cart.length === 0 || total <= 0
+    }
+}
+
+// Limpar carrinho
+function clearCart() {
+    if (cart.length === 0) return
+
+    if (confirm("Deseja limpar o carrinho?")) {
+        cart = []
+        document.getElementById("pdvCustomerName").value = ""
+        document.getElementById("discountPercent").value = ""
+        updateCartDisplay()
+        updateCartTotals()
+        showToast("Carrinho limpo", "info")
+    }
+}
+
+// Finalizar venda
+async function finalizeSale() {
+    if (cart.length === 0) {
+        showToast("Carrinho vazio", "error")
+        return
+    }
+
+    const customerName = document.getElementById("pdvCustomerName").value.trim()
+    const paymentMethod = document.getElementById("paymentMethod").value
+    const discountPercent = parseFloat(document.getElementById("discountPercent").value || 0)
+
+    const subtotal = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0)
+    const discountAmount = (subtotal * discountPercent) / 100
+    const total = subtotal - discountAmount
+
+    if (total <= 0) {
+        showToast("Valor total deve ser maior que zero", "error")
+        return
+    }
+
+    try {
+        // Criar a venda principal
+        const saleData = {
+            customer_name: customerName || "Cliente não identificado",
+            total_amount: total,
+            subtotal: subtotal,
+            discount_percent: discountPercent,
+            discount_amount: discountAmount,
+            payment_method: paymentMethod,
+            items: cart.map(item => ({
+                stock_id: item.id,
+                name: item.name,
+                code: item.code,
+                quantity: item.quantity,
+                unit_price: item.price,
+                total_price: item.price * item.quantity
+            })),
+            created_at: new Date().toISOString()
+        }
+
+        // Registrar cada item como venda individual (compatível com sua tabela sales)
+        const salePromises = cart.map(async (item) => {
+            const stockItem = stock.find(s => s.id === item.id)
+            const profit = (item.price - stockItem.purchase_price) * item.quantity
+
+            return db.addSale({
+                device: item.name,
+                brand: stockItem.brand,
+                model: stockItem.model,
+                condition: stockItem.state || "Usado",
+                purchase_price: stockItem.purchase_price * item.quantity,
+                sale_price: item.price * item.quantity,
+                profit: profit,
+                customer_name: customerName || null,
+                notes: `PDV - ${paymentMethod} - Desconto: ${discountPercent}%`,
+                stock_item_id: item.id
+            })
+        })
+
+        await Promise.all(salePromises)
+
+        // Atualizar estoque
+        const stockPromises = cart.map(async (item) => {
+            const stockItem = stock.find(s => s.id === item.id)
+            const newQuantity = stockItem.quantity - item.quantity
+
+            return db.updateStock(item.id, {
+                ...stockItem,
+                quantity: newQuantity
+            })
+        })
+
+        await Promise.all(stockPromises)
+
+        // Registrar transação financeira
+        await db.addTransaction({
+            type: "entrada",
+            category: "venda",
+            description: `${cart.length} item(s)`,
+            amount: total,
+            status: "pago",
+            customer_name: customerName || null
+        })
+
+        // Salvar venda atual para impressão
+        currentSale = {
+            ...saleData,
+            id: Date.now(), // ID temporário
+            date: new Date().toLocaleString("pt-BR")
+        }
+
+        // Limpar carrinho
+        cart = []
+        document.getElementById("pdvCustomerName").value = ""
+        document.getElementById("discountPercent").value = ""
+
+        // Atualizar displays
+        updateDashboard()
+        updateCartDisplay()
+        updateCartTotals()
+        await loadAllData() // Recarregar todos os dados
+        updateTodaysSales()
+        
+        // Habilitar impressão
+        document.getElementById("printReceipt").disabled = false
+
+        showToast(`Venda finalizada! Total: ${formatCurrency(total)}`, "success")
+
+    } catch (error) {
+        console.error("Erro ao finalizar venda:", error)
+        showToast("Erro ao finalizar venda", "error")
+    }
+}
+
+// Atualizar vendas do dia
+function updateTodaysSales() {
+    const today = new Date().toDateString()
+    const todaySales = sales.filter(sale => 
+        new Date(sale.created_at).toDateString() === today
+    )
+
+    const todayTotal = todaySales.reduce((sum, sale) => sum + (sale.sale_price || 0), 0)
+    
+    document.getElementById("todayTotal").textContent = formatCurrency(todayTotal)
+    document.getElementById("todayCount").textContent = todaySales.length
+
+    // Atualizar tabela de vendas do dia
+    updateTodaySalesTable(todaySales)
+}
+
+// Atualizar tabela de vendas do dia
+function updateTodaySalesTable(todaySales) {
+    const tbody = document.getElementById("todaySalesTable")
+    if (!tbody) return
+
+    if (todaySales.length === 0) {
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="6" class="text-center text-muted py-3">
+                    Nenhuma venda hoje
+                </td>
+            </tr>
+        `
+        return
+    }
+
+    tbody.innerHTML = todaySales.map(sale => {
+        const time = new Date(sale.created_at).toLocaleTimeString("pt-BR", {
+            hour: "2-digit",
+            minute: "2-digit"
+        })
+
+        return `
+            <tr>
+                <td>${time}</td>
+                <td>${sale.customer_name || "N/A"}</td>
+                <td>${sale.device}</td>
+                <td>${formatCurrency(sale.sale_price)}</td>
+                <td>
+                    <span class="badge bg-info">
+                        ${getPaymentMethodText(sale.notes)}
+                    </span>
+                </td>
+                <td>
+                    <button class="btn btn-sm btn-outline-primary" 
+                            onclick="reprintSaleReceipt(${sale.id})" title="Reimprimir">
+                        <i class="bi bi-printer"></i>
+                    </button>
+                </td>
+            </tr>
+        `
+    }).join("")
+}
+
+// Extrair método de pagamento das notas
+function getPaymentMethodText(notes) {
+    if (!notes) return "N/A"
+    
+    if (notes.includes("dinheiro")) return "Dinheiro"
+    if (notes.includes("cartao")) return "Cartão"
+    if (notes.includes("pix")) return "PIX"
+    if (notes.includes("transferencia")) return "Transferência"
+    
+    return "Outros"
+}
+
+// Imprimir último recibo
+function printLastReceipt() {
+    if (!currentSale) {
+        showToast("Nenhuma venda para imprimir", "warning")
+        return
+    }
+
+    generateReceipt(currentSale)
+}
+
+// Reimprimir recibo de venda
+function reprintSaleReceipt(saleId) {
+    const sale = sales.find(s => s.id === saleId)
+    if (!sale) {
+        showToast("Venda não encontrada", "error")
+        return
+    }
+
+    // Reconstituir dados da venda para impressão
+    const saleForReceipt = {
+        id: sale.id,
+        customer_name: sale.customer_name,
+        total_amount: sale.sale_price,
+        payment_method: getPaymentMethodText(sale.notes),
+        items: [{
+            name: sale.device,
+            quantity: 1,
+            unit_price: sale.sale_price,
+            total_price: sale.sale_price
+        }],
+        date: new Date(sale.created_at).toLocaleString("pt-BR")
+    }
+
+    generateReceipt(saleForReceipt)
+}
+
+// Gerar recibo para impressão
+function generateReceipt(sale) {
+    const receiptWindow = window.open("", "_blank", "width=300,height=600")
+    
+    const receiptHTML = `
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <title>Recibo - Venda #${sale.id}</title>
+            <style>
+                body {
+                    font-family: 'Courier New', monospace;
+                    font-size: 12px;
+                    margin: 10px;
+                    line-height: 1.3;
+                }
+                .header {
+                    text-align: center;
+                    border-bottom: 2px dashed #000;
+                    padding-bottom: 10px;
+                    margin-bottom: 15px;
+                }
+                .item {
+                    display: flex;
+                    justify-content: space-between;
+                    margin-bottom: 5px;
+                }
+                .total {
+                    border-top: 2px dashed #000;
+                    padding-top: 10px;
+                    margin-top: 15px;
+                    font-weight: bold;
+                }
+                .footer {
+                    text-align: center;
+                    margin-top: 20px;
+                    border-top: 1px dashed #000;
+                    padding-top: 10px;
+                }
+                @media print {
+                    body { margin: 0; }
+                }
+            </style>
+        </head>
+        <body>
+            <div class="header">
+                <h2>ASSISTÊNCIA TÉCNICA</h2>
+                <p>Recibo de Venda</p>
+                <p>Venda #${sale.id}</p>
+                <p>${sale.date}</p>
+            </div>
+
+            <div>
+                <strong>Cliente:</strong> ${sale.customer_name || "N/A"}<br>
+                <strong>Pagamento:</strong> ${sale.payment_method || "N/A"}
+            </div>
+
+            <div style="margin: 15px 0;">
+                <strong>ITENS:</strong>
+            </div>
+
+            ${sale.items.map(item => `
+                <div class="item">
+                    <div>
+                        ${item.quantity}x ${item.name}<br>
+                        <small>${formatCurrency(item.unit_price)}</small>
+                    </div>
+                    <div>${formatCurrency(item.total_price)}</div>
+                </div>
+            `).join("")}
+
+            <div class="total">
+                ${sale.subtotal ? `
+                    <div style="display: flex; justify-content: space-between;">
+                        <span>Subtotal:</span>
+                        <span>${formatCurrency(sale.subtotal)}</span>
+                    </div>
+                ` : ""}
+                ${sale.discount_amount > 0 ? `
+                    <div style="display: flex; justify-content: space-between;">
+                        <span>Desconto (${sale.discount_percent}%):</span>
+                        <span>-${formatCurrency(sale.discount_amount)}</span>
+                    </div>
+                ` : ""}
+                <div style="display: flex; justify-content: space-between; font-size: 14px;">
+                    <span>TOTAL:</span>
+                    <span>${formatCurrency(sale.total_amount)}</span>
+                </div>
+            </div>
+
+            <div class="footer">
+                <p>Obrigado pela preferência!</p>
+                <small>Sistema de Gestão - PDV</small>
+            </div>
+
+            <script>
+                window.onload = function() {
+                    window.print();
+                }
+            </script>
+        </body>
+        </html>
+    `
+
+    receiptWindow.document.write(receiptHTML)
+    receiptWindow.document.close()
+}
+
+// Função para mostrar toasts (notificações)
+function showToast(message, type = "info") {
+    // Criar elemento de toast se não existir
+    let toastContainer = document.getElementById("toastContainer")
+    if (!toastContainer) {
+        toastContainer = document.createElement("div")
+        toastContainer.id = "toastContainer"
+        toastContainer.className = "position-fixed top-0 end-0 p-3"
+        toastContainer.style.zIndex = "9999"
+        document.body.appendChild(toastContainer)
+    }
+
+    const toastId = "toast_" + Date.now()
+    const bgClass = {
+        success: "bg-success",
+        error: "bg-danger", 
+        warning: "bg-warning",
+        info: "bg-info"
+    }[type] || "bg-info"
+
+    const toastHTML = `
+        <div class="toast ${bgClass} text-white" id="${toastId}" role="alert">
+            <div class="d-flex">
+                <div class="toast-body">
+                    ${message}
+                </div>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto" 
+                        onclick="document.getElementById('${toastId}').remove()">
+                </button>
+            </div>
+        </div>
+    `
+
+    toastContainer.insertAdjacentHTML("beforeend", toastHTML)
+
+    // Auto-remover após 3 segundos
+    setTimeout(() => {
+        const toast = document.getElementById(toastId)
+        if (toast) toast.remove()
+    }, 3000)
 }

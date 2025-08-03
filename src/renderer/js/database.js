@@ -1,4 +1,4 @@
-// Configuração do Supabase
+// Arquivo: src/renderer/js/database.js
 const SUPABASE_URL = "https://pohyklelteffixawmtga.supabase.co"
 const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBvaHlrbGVsdGVmZml4YXdtdGdhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTMyMzU5NjAsImV4cCI6MjA2ODgxMTk2MH0.1WKPold6UPfRKgV0u1cHc7JY4RGcvx46BVgtwIQ3CHw"
 
@@ -206,6 +206,7 @@ class Database {
                 .insert([
                     {
                         name: item.name,
+                        code: item.code,
                         category: item.category,
                         state: item.state,
                         brand: item.brand,
@@ -421,6 +422,53 @@ class Database {
             return data[0]
         } catch (error) {
             console.error("Error updating transaction:", error)
+            throw error
+        }
+    }
+
+    // PDV
+    async addSale(saleData) {
+        try {
+            const { data, error } = await supabase
+                .from('sales')
+                .insert([saleData])
+                .select()
+
+            if (error) throw error
+            return data[0]
+        } catch (error) {
+            console.error('Error adding sale:', error)
+            throw error
+        }
+    }
+
+    async updateStock(id, stockData) {
+        try {
+            const { data, error } = await supabase
+                .from('stock')
+                .update(stockData)
+                .eq('id', id)
+                .select()
+
+            if (error) throw error
+            return data[0]
+        } catch (error) {
+            console.error('Error updating stock:', error)
+            throw error
+        }
+    }
+
+    async addTransaction(transactionData) {
+        try {
+            const { data, error } = await supabase
+                .from('transactions')
+                .insert([transactionData])
+                .select()
+
+            if (error) throw error
+            return data[0]
+        } catch (error) {
+            console.error('Error adding transaction:', error)
             throw error
         }
     }
