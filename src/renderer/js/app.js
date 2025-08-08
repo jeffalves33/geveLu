@@ -186,7 +186,6 @@ async function loadAllData() {
 }
 
 function updateDashboard() {
-    console.log(services)
     // Calcular métricas
     const serviceRevenue = services.filter((s) => s.status === "Entregue").reduce((sum, s) => sum + (s.value || 0), 0)
 
@@ -329,7 +328,7 @@ function updateSalesTable() {
                         <i class="bi bi-three-dots-vertical"></i>
                     </button>
                     <ul class="dropdown-menu">
-                        <li><a class="dropdown-item edit-sale" href="#" data-sale-id="${sale.id}"><i class="bi bi-pencil me-2"></i>Editar</a></li>
+                        <!--<li><a class="dropdown-item edit-sale" href="#" data-sale-id="${sale.id}"><i class="bi bi-pencil me-2"></i>Editar</a></li>-->
                         <li><a class="dropdown-item delete-sale text-danger" href="#" data-sale-id="${sale.id}"><i class="bi bi-trash me-2"></i>Excluir</a></li>
                     </ul>
                 </div>
@@ -1003,8 +1002,9 @@ async function updateServiceStatus(serviceId, newStatus) {
             }
         }
 
+        // Atualizar dados
+        await loadAllData()
         updateDashboard()
-        updateFinancialTables()
     } catch (error) {
         console.error("Error updating service status:", error)
     }
@@ -1014,7 +1014,9 @@ async function updateTransactionStatus(transactionId) {
     try {
         await db.updateTransactionStatus(transactionId)
 
-        loadAllData()
+        // Atualizar dados
+        await loadAllData()
+        updateDashboard()
     } catch (error) {
         console.error("Error updating service status:", error)
     }
@@ -1266,8 +1268,9 @@ async function deleteService(serviceId) {
                     // Remover o serviço do array local
                     const deletedService = services.splice(serviceIndex, 1)[0];
 
-                    // Atualizar a tabela
-                    updateServicesTable();
+                    // Atualizar dados
+                    await loadAllData()
+                    updateDashboard()
 
                     // Fechar o modal
                     modal.hide();
