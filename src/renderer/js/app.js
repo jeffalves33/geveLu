@@ -186,6 +186,7 @@ async function loadAllData() {
 }
 
 function updateDashboard() {
+    console.log(services)
     // Calcular métricas
     const serviceRevenue = services.filter((s) => s.status === "Entregue").reduce((sum, s) => sum + (s.value || 0), 0)
 
@@ -1740,7 +1741,6 @@ async function updateStockData(stockId) {
 
         // Atualizar no banco de dados
         const updatedItem = await db.updateStockItem(stockId, stockData);
-        console.log("🚀 ~ updateStockData ~ updatedItem: ", updatedItem)
 
         // Atualizar no array local
         const index = stock.findIndex(item => item.id == stockId);
