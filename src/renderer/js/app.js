@@ -73,6 +73,7 @@ function setupEventListeners() {
 
     // Botões de salvar
     document.getElementById("saveServiceBtn")?.addEventListener('click', saveService);
+    document.getElementById("refreshPDVSearch")?.addEventListener('click', loadProductsGrid);
     document.getElementById("saveSaleBtn")?.addEventListener('click', saveSale);
     document.getElementById("saveTransactionBtn")?.addEventListener('click', saveTransaction);
     document.getElementById("saveStockBtn")?.addEventListener('click', saveStock);
@@ -226,13 +227,15 @@ function updateDashboard() {
 
     // Atualizar métricas de estoque
     const totalStockItems = stock.reduce((sum, item) => sum + item.quantity, 0)
-    const totalStockValue = stock.reduce((sum, item) => sum + item.quantity * item.purchase_price, 0)
+    const totalStockValueGross = stock.reduce((sum, item) => sum + item.quantity * item.purchase_price, 0)
+    const totalStockValueProfit = stock.reduce((sum, item) => sum + item.quantity * (item.sale_price - item.purchase_price), 0)
     const outOfStockItems = stock.filter((item) => item.quantity === 0).length
 
     document.getElementById("totalStockItems").textContent = totalStockItems
     document.getElementById("lowStockCount").textContent = totalStockItems
     document.getElementById("totalStockTypes").textContent = `${stock.length} tipos diferentes`
-    document.getElementById("totalStockValue").textContent = formatCurrency(totalStockValue)
+    document.getElementById("totalStockValueGross").textContent = formatCurrency(totalStockValueGross)
+    document.getElementById("totalStockValueProfit").textContent = formatCurrency(totalStockValueProfit)
     document.getElementById("outOfStockItems").textContent = outOfStockItems
 
     // Atualizar métricas financeiras
@@ -316,11 +319,7 @@ function updateSalesTable() {
                 </div>
             </td>
             <td>${getConditionBadge(sale.condition)}</td>
-            <td>${formatCurrency(sale.purchase_price)}</td>
             <td>${formatCurrency(sale.sale_price)}</td>
-            <td class="${sale.profit > 0 ? "text-success" : "text-danger"}">
-                ${formatCurrency(sale.profit)}
-            </td>
             <td>${formatDate(sale.created_at)}</td>
             <td>${sale.customer_name || "-"}</td>
             <td>
@@ -357,7 +356,7 @@ function updateStockTable() {
             <td>${formatCurrency(item.purchase_price)}</td>
             <td>${formatCurrency(item.sale_price)}</td>
             <td>${getStockStatusBadge(item.state)}</td>
-            <td>${item.location || "-"}</td>
+            <td>${item.code || "-"}</td>
             <td>
                 <div class="dropdown">
                     <button class="btn btn-light btn-sm" type="button" data-bs-toggle="dropdown" aria-expanded="false">
@@ -631,6 +630,8 @@ async function saveService() {
         const serviceValueInput = document.getElementById("serviceValue").value.trim();
         const deliveryDate = document.getElementById("deliveryDate").value;
 
+        let sale_price = 0;
+
         // Verificar se o formulário HTML é válido primeiro
         const form = document.getElementById("serviceForm");
         if (!form.checkValidity()) {
@@ -655,6 +656,7 @@ async function saveService() {
         if (selectedParts && selectedParts.length > 0) {
             for (const part of selectedParts) {
                 const stockItem = stock.find((item) => item.id == part.id);
+                sale_price = stockItem.sale_price;
                 if (!stockItem) {
                     console.log(`Peça não encontrada no estoque`);
                     return;
@@ -672,7 +674,7 @@ async function saveService() {
             customerPhone: customerPhone,
             device: device,
             problem: problem,
-            value: serviceValue,
+            value: serviceValue + sale_price,
             deliveryDate: deliveryDate,
             notes: document.getElementById("serviceNotes").value.trim() || "",
             usedParts: selectedParts || [],
@@ -882,6 +884,14 @@ async function saveTransaction() {
 
 async function saveStock() {
     try {
+        const saveBtn = document.getElementById("saveStockBtn");
+        const stockId = saveBtn.getAttribute('data-stock-id');
+
+        // Se existe stockId, é uma edição
+        if (stockId) {
+            return await updateStockData(stockId);
+        }
+
         // Verificar se o formulário HTML é válido primeiro
         const form = document.getElementById("stockForm");
         if (!form.checkValidity()) {
@@ -893,13 +903,9 @@ async function saveStock() {
         const code = document.getElementById("itemCode").value;
         const category = document.getElementById("category").value;
         const state = document.getElementById("state").value;
-        const brand = document.getElementById("itemBrand").value;
-        const model = document.getElementById("itemModel").value;
         const quantityInput = document.getElementById("quantity").value.trim();
-        const purchasePriceInput = document.getElementById("purchasePriceStock").value.trim();
+        const purchasePriceStock = document.getElementById("purchasePriceStock").value.trim();
         const salePriceInput = document.getElementById("salePriceStock").value.trim();
-        const supplier = document.getElementById("supplier").value;
-        const location = document.getElementById("location").value;
         const notes = document.getElementById("stockNotes").value;
 
         // Validar quantidade
@@ -910,29 +916,18 @@ async function saveStock() {
             return;
         }
 
-        // Validar preço de compra
-        const purchasePrice = Number.parseFloat(purchasePriceInput);
-        if (isNaN(purchasePrice) || purchasePrice < 0) {
-            console.log("Preço de compra deve ser um número válido maior ou igual a zero");
-            document.getElementById("purchasePriceStock").focus();
-            return;
-        }
-
-        // Validar preço de venda
+        // Validar preço de custo e venda
         const salePrice = Number.parseFloat(salePriceInput);
         if (isNaN(salePrice) || salePrice < 0) {
             console.log("Preço de venda deve ser um número válido maior ou igual a zero");
             document.getElementById("salePriceStock").focus();
             return;
         }
-
-        // Validar se preço de venda não é menor que preço de compra (opcional)
-        if (salePrice < purchasePrice) {
-            const confirm = window.confirm("O preço de venda é menor que o preço de compra. Deseja continuar?");
-            if (!confirm) {
-                document.getElementById("salePriceStock").focus();
-                return;
-            }
+        const purchasePrice = Number.parseFloat(purchasePriceStock);
+        if (isNaN(purchasePrice) || purchasePrice < 0) {
+            console.log("Preço de custo deve ser um número válido maior ou igual a zero");
+            document.getElementById("purchasePriceStock").focus();
+            return;
         }
 
         const stockData = {
@@ -940,13 +935,9 @@ async function saveStock() {
             code: code,
             category: category,
             state: state,
-            brand: brand,
-            model: model,
             quantity: quantity,
-            purchasePrice: purchasePrice,
             salePrice: salePrice,
-            supplier: supplier,
-            location: location,
+            purchasePrice: purchasePrice,
             notes: notes,
         }
 
@@ -1677,13 +1668,9 @@ async function updateStockItem(stockId) {
         document.getElementById('itemCode').value = item.code || '';
         document.getElementById('category').value = item.category || '';
         document.getElementById('state').value = item.state || '';
-        document.getElementById('itemBrand').value = item.brand || '';
-        document.getElementById('itemModel').value = item.model || '';
         document.getElementById('quantity').value = item.quantity || '';
         document.getElementById('purchasePriceStock').value = item.purchase_price || '';
         document.getElementById('salePriceStock').value = item.sale_price || '';
-        document.getElementById('supplier').value = item.supplier || '';
-        document.getElementById('location').value = item.location || '';
         document.getElementById('stockNotes').value = item.notes || '';
 
         // Adicionar atributo para identificar que é uma edição
@@ -1696,6 +1683,115 @@ async function updateStockItem(stockId) {
     } catch (error) {
         console.error('Erro ao carregar dados do item:', error);
         alert('Erro ao carregar dados do item');
+    }
+}
+
+async function updateStockData(stockId) {
+    try {
+        // Verificar se o formulário HTML é válido primeiro
+        const form = document.getElementById("stockForm");
+        if (!form.checkValidity()) {
+            form.reportValidity();
+            return;
+        }
+
+        const name = document.getElementById("itemName").value.trim();
+        const code = document.getElementById("itemCode").value;
+        const category = document.getElementById("category").value;
+        const state = document.getElementById("state").value;
+        const quantityInput = document.getElementById("quantity").value.trim();
+        const purchasePriceStock = document.getElementById("purchasePriceStock").value.trim();
+        const salePriceInput = document.getElementById("salePriceStock").value.trim();
+        const notes = document.getElementById("stockNotes").value;
+
+        // Validar quantidade
+        const quantity = Number.parseInt(quantityInput);
+        if (isNaN(quantity) || quantity < 0) {
+            console.log("Quantidade deve ser um número válido maior ou igual a zero");
+            document.getElementById("quantity").focus();
+            return;
+        }
+
+        // Validar preço de custo e venda
+        const salePrice = Number.parseFloat(salePriceInput);
+        if (isNaN(salePrice) || salePrice < 0) {
+            console.log("Preço de venda deve ser um número válido maior ou igual a zero");
+            document.getElementById("salePriceStock").focus();
+            return;
+        }
+        const purchasePrice = Number.parseFloat(purchasePriceStock);
+        if (isNaN(purchasePrice) || purchasePrice < 0) {
+            console.log("Preço de custo deve ser um número válido maior ou igual a zero");
+            document.getElementById("purchasePriceStock").focus();
+            return;
+        }
+
+        const stockData = {
+            id: stockId,
+            name: name,
+            code: code,
+            category: category,
+            state: state,
+            quantity: quantity,
+            sale_price: salePrice,
+            purchase_price: purchasePrice,
+            notes: notes,
+        }
+
+        // Atualizar no banco de dados
+        const updatedItem = await db.updateStockItem(stockId, stockData);
+        console.log("🚀 ~ updateStockData ~ updatedItem: ", updatedItem)
+
+        // Atualizar no array local
+        const index = stock.findIndex(item => item.id == stockId);
+        if (index !== -1) {
+            stock[index] = updatedItem;
+        }
+
+        // Limpar formulário
+        document.getElementById("stockForm").reset();
+
+        // Resetar o botão para o estado de criação
+        const saveBtn = document.getElementById("saveStockBtn");
+        saveBtn.textContent = 'Salvar Item';
+        saveBtn.removeAttribute('data-stock-id');
+
+        // Resetar título do modal
+        document.querySelector('#stockModal .modal-title').textContent = 'Novo Item';
+
+        // Fechar modal
+        const modal = bootstrap.Modal.getInstance(document.getElementById("stockModal"));
+        modal.hide();
+
+        // Atualizar dados
+        updateStockTable();
+        loadPartsOptions();
+        loadStockDevices();
+        updateDashboard();
+
+        console.log("Item atualizado com sucesso!");
+
+    } catch (error) {
+        console.error("Error updating stock item:", error);
+
+        // Tratamento específico de diferentes tipos de erro
+        let errorMessage = "Erro ao atualizar item. Tente novamente.";
+
+        if (error.message) {
+            if (error.message.includes("Invalid input data")) {
+                errorMessage = "Dados inválidos. Verifique se todos os campos obrigatórios estão preenchidos corretamente.";
+            } else if (error.message.includes("Network") || error.message.includes("fetch")) {
+                errorMessage = "Erro de conexão. Verifique sua internet e tente novamente.";
+            } else if (error.message.includes("Database") || error.message.includes("database")) {
+                errorMessage = "Erro no banco de dados. Tente novamente em alguns instantes.";
+            } else if (error.message.includes("400")) {
+                errorMessage = "Dados inválidos. Verifique se todos os campos estão preenchidos corretamente.";
+            } else if (error.message.includes("404")) {
+                errorMessage = "Item não encontrado. Pode ter sido removido por outro usuário.";
+            }
+        }
+
+        console.error(errorMessage);
     }
 }
 
@@ -2165,7 +2261,7 @@ function setupPDVEventListeners() {
     // Busca de produtos
     const pdvSearch = document.getElementById("pdvSearch")
     if (pdvSearch) {
-        pdvSearch.addEventListener("input", function() {
+        pdvSearch.addEventListener("input", function () {
             filterProducts(this.value)
         })
     }
@@ -2174,7 +2270,7 @@ function setupPDVEventListeners() {
     const codeInput = document.getElementById("productCode")
     if (codeInput) {
         codeInput.focus() //manter sempre em foco
-        codeInput.addEventListener("keypress", function(e) {
+        codeInput.addEventListener("keypress", function (e) {
             if (e.key === "Enter") {
                 e.preventDefault()
                 addProductByCode(this.value)
@@ -2240,7 +2336,7 @@ function createProductCard(product) {
     col.className = "col-md-6 col-lg-4 mb-2"
 
     const isLowStock = product.quantity <= 5
-    const stockBadge = isLowStock ? 
+    const stockBadge = isLowStock ?
         `<span class="badge bg-warning text-dark">Estoque baixo</span>` :
         `<span class="badge bg-success">${product.quantity} disponível</span>`
 
@@ -2282,7 +2378,7 @@ function filterProducts(searchTerm) {
     products.forEach(product => {
         const text = product.textContent.toLowerCase()
         const container = product.closest(".col-md-6")
-        
+
         if (text.includes(term)) {
             container.style.display = "block"
         } else {
@@ -2295,7 +2391,7 @@ function filterProducts(searchTerm) {
 async function addProductByCode(code) {
     if (!code.trim()) return
 
-    const product = stock.find(item => 
+    const product = stock.find(item =>
         item.code.toString() === code.toString() && item.quantity > 0
     )
 
@@ -2310,7 +2406,7 @@ async function addProductByCode(code) {
 // Adicionar produto ao carrinho
 function addToCart(productId) {
     const product = stock.find(item => item.id === productId)
-    
+
     if (!product || product.quantity <= 0) {
         showToast("Produto indisponível", "error")
         return
@@ -2318,7 +2414,7 @@ function addToCart(productId) {
 
     // Verificar se já existe no carrinho
     const existingItem = cart.find(item => item.id === productId)
-    
+
     if (existingItem) {
         // Verificar se pode adicionar mais
         if (existingItem.quantity >= product.quantity) {
@@ -2496,16 +2592,13 @@ async function finalizeSale() {
         // Registrar cada item como venda individual (compatível com sua tabela sales)
         const salePromises = cart.map(async (item) => {
             const stockItem = stock.find(s => s.id === item.id)
-            const profit = (item.price - stockItem.purchase_price) * item.quantity
 
             return db.addSale({
                 device: item.name,
                 brand: stockItem.brand,
                 model: stockItem.model,
                 condition: stockItem.state || "Usado",
-                purchase_price: stockItem.purchase_price * item.quantity,
                 sale_price: item.price * item.quantity,
-                profit: profit,
                 customer_name: customerName || null,
                 notes: `PDV - ${paymentMethod} - Desconto: ${discountPercent}%`,
                 stock_item_id: item.id
@@ -2555,7 +2648,7 @@ async function finalizeSale() {
         updateCartTotals()
         await loadAllData() // Recarregar todos os dados
         updateTodaysSales()
-        
+
         // Habilitar impressão
         document.getElementById("printReceipt").disabled = false
 
@@ -2570,12 +2663,12 @@ async function finalizeSale() {
 // Atualizar vendas do dia
 function updateTodaysSales() {
     const today = new Date().toDateString()
-    const todaySales = sales.filter(sale => 
+    const todaySales = sales.filter(sale =>
         new Date(sale.created_at).toDateString() === today
     )
 
     const todayTotal = todaySales.reduce((sum, sale) => sum + (sale.sale_price || 0), 0)
-    
+
     document.getElementById("todayTotal").textContent = formatCurrency(todayTotal)
     document.getElementById("todayCount").textContent = todaySales.length
 
@@ -2630,12 +2723,12 @@ function updateTodaySalesTable(todaySales) {
 // Extrair método de pagamento das notas
 function getPaymentMethodText(notes) {
     if (!notes) return "N/A"
-    
+
     if (notes.includes("dinheiro")) return "Dinheiro"
     if (notes.includes("cartao")) return "Cartão"
     if (notes.includes("pix")) return "PIX"
     if (notes.includes("transferencia")) return "Transferência"
-    
+
     return "Outros"
 }
 
@@ -2678,7 +2771,7 @@ function reprintSaleReceipt(saleId) {
 // Gerar recibo para impressão
 function generateReceipt(sale) {
     const receiptWindow = window.open("", "_blank", "width=300,height=600")
-    
+
     const receiptHTML = `
         <!DOCTYPE html>
         <html>
@@ -2798,7 +2891,7 @@ function showToast(message, type = "info") {
     const toastId = "toast_" + Date.now()
     const bgClass = {
         success: "bg-success",
-        error: "bg-danger", 
+        error: "bg-danger",
         warning: "bg-warning",
         info: "bg-info"
     }[type] || "bg-info"

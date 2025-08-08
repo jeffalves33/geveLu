@@ -37,7 +37,7 @@
             <li class="nav-item" role="presentation">
                 <button class="nav-link active" id="dashboard-tab" data-bs-toggle="tab" data-bs-target="#dashboard"
                     type="button" role="tab">
-                    <i class="bi bi-speedometer2"></i> Dashboard
+                    <i class="bi bi-speedometer2"></i> Geral
                 </button>
             </li>
             <li class="nav-item" role="presentation">
@@ -267,9 +267,7 @@
                                         <th>ID</th>
                                         <th>Aparelho</th>
                                         <th>Estado</th>
-                                        <th>Preço Compra</th>
                                         <th>Preço Venda</th>
-                                        <th>Lucro</th>
                                         <th>Data</th>
                                         <th>Cliente</th>
                                         <th>Ações</th>
@@ -294,8 +292,26 @@
                 </div>
 
                 <div class="row g-3 mb-4">
-                    <div class="col-md-4">
+                    <div class="col-md-3">
                         <div class="card bg-primary text-white">
+                            <div class="card-body">
+                                <h6>Valor bruto</h6>
+                                <h4 id="totalStockValueGross">0</h4>
+                                <small>Valor de estoque</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card bg-success text-white">
+                            <div class="card-body">
+                                <h6>Lucro Total</h6>
+                                <h4 id="totalStockValueProfit">R$ 0,00</h4>
+                                <small>Ganhos totais</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card bg-black text-white">
                             <div class="card-body">
                                 <h6>Total de Itens</h6>
                                 <h4 id="totalStockItems">0</h4>
@@ -303,16 +319,7 @@
                             </div>
                         </div>
                     </div>
-                    <div class="col-md-4">
-                        <div class="card bg-success text-white">
-                            <div class="card-body">
-                                <h6>Valor Total</h6>
-                                <h4 id="totalStockValue">R$ 0,00</h4>
-                                <small>Valor do estoque</small>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-4">
+                    <div class="col-md-3">
                         <div class="card bg-danger text-white">
                             <div class="card-body">
                                 <h6>Sem Estoque</h6>
@@ -352,10 +359,10 @@
                                         <th>Item</th>
                                         <th>Categoria</th>
                                         <th>Quantidade</th>
-                                        <th>Preço Compra</th>
+                                        <th>Preço Custo</th>
                                         <th>Preço Venda</th>
                                         <th>Estado</th>
-                                        <th>Localização</th>
+                                        <th>Código</th>
                                         <th>Opções</th>
                                     </tr>
                                 </thead>
@@ -555,11 +562,16 @@
                     <div class="col-md-8">
                         <div class="card">
                             <div class="card-header">
-                                <div class="row">
-                                    <div class="col-md-6">
-                                        <h5>Produtos Disponíveis</h5>
+                                <div class="row align-items-center">
+                                    <div class="col-md-5">
+                                        <h5 class="mb-0">Produtos Disponíveis</h5>
                                     </div>
-                                    <div class="col-md-6">
+                                    <div class="col-auto">
+                                        <button type="button" id="refreshPDVSearch" class="btn btn-secondary btn-sm">
+                                            <i class="bi bi-arrow-clockwise"></i>
+                                        </button>
+                                    </div>
+                                    <div class="col-md-5">
                                         <input type="text" class="form-control" id="pdvSearch"
                                             placeholder="Buscar produtos...">
                                     </div>
@@ -595,9 +607,9 @@
 
                                 <!-- Informações do cliente -->
                                 <div class="mb-3">
-                                    <label for="pdvCustomerName" class="form-label">Cliente (Opcional)</label>
+                                    <label for="pdvCustomerName" class="form-label">Cliente</label>
                                     <input type="text" class="form-control form-control-sm" id="pdvCustomerName"
-                                        placeholder="Nome do cliente">
+                                        placeholder="Nome do cliente" required>
                                 </div>
 
                                 <!-- Resumo do pedido -->
@@ -876,21 +888,23 @@
                 <div class="modal-body">
                     <form id="stockForm">
                         <div class="row">
-                            <div class="col-md-5">
+                            <div class="col-md-6">
                                 <div class="mb-3">
-                                    <label for="itemName" class="form-label">Nome do Item</label>
+                                    <label for="itemName" class="form-label">Nome do Item *</label>
                                     <input type="text" class="form-control" id="itemName" required>
                                 </div>
                             </div>
-                            <div class="col-md-4">
+                            <div class="col-md-6">
                                 <div class="mb-3">
-                                    <label for="itemCode" class="form-label">Código</label>
+                                    <label for="itemCode" class="form-label">Código *</label>
                                     <input type="text" class="form-control" id="itemCode">
                                 </div>
                             </div>
-                            <div class="col-md-3">
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6">
                                 <div class="mb-3">
-                                    <label for="category" class="form-label">Categoria</label>
+                                    <label for="category" class="form-label">Categoria *</label>
                                     <select class="form-select" id="category" required>
                                         <option value="">Selecione a categoria</option>
                                         <option value="tela">Tela</option>
@@ -906,11 +920,9 @@
                                     </select>
                                 </div>
                             </div>
-                        </div>
-                        <div class="row">
-                            <div class="col-md-3">
+                            <div class="col-md-6">
                                 <div class="mb-3">
-                                    <label for="state" class="form-label">Estado</label>
+                                    <label for="state" class="form-label">Estado *</label>
                                     <select class="form-select" id="state" required>
                                         <option value="">Selecione a estado</option>
                                         <option value="novo">Novo</option>
@@ -918,50 +930,25 @@
                                     </select>
                                 </div>
                             </div>
-                            <div class="col-md-5">
-                                <div class="mb-3">
-                                    <label for="itemBrand" class="form-label">Marca (Opcional)</label>
-                                    <input type="text" class="form-control" id="itemBrand">
-                                </div>
-                            </div>
-                            <div class="col-md-4">
-                                <div class="mb-3">
-                                    <label for="itemModel" class="form-label">Modelo (Opcional)</label>
-                                    <input type="text" class="form-control" id="itemModel">
-                                </div>
-                            </div>
                         </div>
                         <div class="row">
-                            <div class="col-md-4">
+                            <div class="col-md-6">
                                 <div class="mb-3">
-                                    <label for="quantity" class="form-label">Quantidade</label>
+                                    <label for="quantity" class="form-label">Quantidade *</label>
                                     <input type="number" class="form-control" id="quantity" required>
                                 </div>
                             </div>
-                            <div class="col-md-4">
+                            <div class="col-md-3">
                                 <div class="mb-3">
-                                    <label for="purchasePriceStock" class="form-label">Preço Compra</label>
-                                    <input type="number" class="form-control" id="purchasePriceStock" required>
+                                    <label for="purchasePriceStock" class="form-label">Preço de Custo (unid.) *</label>
+                                    <input type="number" class="form-control" id="purchasePriceStock" step="0.01"
+                                        required>
                                 </div>
                             </div>
-                            <div class="col-md-4">
+                            <div class="col-md-3">
                                 <div class="mb-3">
-                                    <label for="salePriceStock" class="form-label">Preço Venda</label>
+                                    <label for="salePriceStock" class="form-label">Preço de Venda (unid.) *</label>
                                     <input type="number" class="form-control" id="salePriceStock" step="0.01" required>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="row">
-                            <div class="col-md-6">
-                                <div class="mb-3">
-                                    <label for="supplier" class="form-label">Fornecedor (Opcional)</label>
-                                    <input type="text" class="form-control" id="supplier">
-                                </div>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="mb-3">
-                                    <label for="location" class="form-label">Localização (Opcional)</label>
-                                    <input type="text" class="form-control" id="location">
                                 </div>
                             </div>
                         </div>
