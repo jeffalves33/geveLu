@@ -89,8 +89,9 @@ function setupEventListeners() {
     });
 
     document.addEventListener('click', function (e) {
-        if (e.target.classList.contains('service-listener-PDV')) {
-            const serviceId = e.target.getAttribute('data-service-id');
+        if (e.target.closest('.service-listener-PDV')) {
+            const card = e.target.closest('.service-listener-PDV');
+            const serviceId = card.getAttribute('data-service-id');
             addToCart(serviceId)
         }
 
@@ -1641,8 +1642,9 @@ async function deleteSale(saleId) {
                 const saleIndex = sales.findIndex(s => s.id == saleId);
                 if (saleIndex !== -1) {
                     sales.splice(saleIndex, 1);
-                    updateSalesTable();
-                    updateDashboard();
+                    // Atualizar dados
+                    await loadAllData()
+                    updateDashboard()
                     showSuccessMessage(`Venda #${saleId} excluída com sucesso!`);
                 }
             }
@@ -2399,7 +2401,7 @@ async function addProductByCode(code) {
     )
 
     if (product) {
-        addToCart(product.id)
+        addToCart(product.id.toString()) // ADICIONE .toString() aqui
         showToast(`${product.name} adicionado ao carrinho`, "success")
     } else {
         showToast("Produto não encontrado ou sem estoque", "error")
@@ -2408,7 +2410,7 @@ async function addProductByCode(code) {
 
 // Adicionar produto ao carrinho
 function addToCart(productId) {
-    const product = stock.find(item => item.id === productId)
+    const product = stock.find(item => item.id == productId)
 
     if (!product || product.quantity <= 0) {
         showToast("Produto indisponível", "error")
@@ -2494,19 +2496,15 @@ function updateCartDisplay() {
                         </h6>
                         <small class="text-muted">Código: ${item.code}</small>
                     </div>
-                    <button class="btn btn-sm btn-outline-danger ms-2" 
-                            onclick="removeFromCart(${item.id})" title="Remover">
-                        <i class="bi bi-trash"></i>
-                    </button>
                 </div>
                 <div class="d-flex justify-content-between align-items-center mt-2">
                     <div class="input-group input-group-sm" style="width: 100px;">
-                        <button class="btn btn-outline-secondary" type="button" 
-                                onclick="updateCartQuantity(${item.id}, ${item.quantity - 1})">-</button>
+                        <!--<button class="btn btn-outline-secondary" type="button" 
+                                onclick="updateCartQuantity(${item.id}, ${item.quantity - 1})">-</button>-->
                         <input type="text" class="form-control text-center" 
                                value="${item.quantity}" readonly>
-                        <button class="btn btn-outline-secondary" type="button" 
-                                onclick="updateCartQuantity(${item.id}, ${item.quantity + 1})">+</button>
+                        <!--<button class="btn btn-outline-secondary" type="button" 
+                                onclick="updateCartQuantity(${item.id}, ${item.quantity + 1})">+</button>-->
                     </div>
                     <div class="text-end">
                         <div class="fw-bold">${formatCurrency(item.price * item.quantity)}</div>
@@ -2541,15 +2539,13 @@ function updateCartTotals() {
 // Limpar carrinho
 function clearCart() {
     if (cart.length === 0) return
+    cart = []
+    document.getElementById("pdvCustomerName").value = ""
+    document.getElementById("discountPercent").value = ""
+    updateCartDisplay()
+    updateCartTotals()
+    showToast("Carrinho limpo", "info")
 
-    if (confirm("Deseja limpar o carrinho?")) {
-        cart = []
-        document.getElementById("pdvCustomerName").value = ""
-        document.getElementById("discountPercent").value = ""
-        updateCartDisplay()
-        updateCartTotals()
-        showToast("Carrinho limpo", "info")
-    }
 }
 
 // Finalizar venda
@@ -2594,11 +2590,10 @@ async function finalizeSale() {
 
         // Registrar cada item como venda individual (compatível com sua tabela sales)
         const salePromises = cart.map(async (item) => {
-            const stockItem = stock.find(s => s.id === item.id)
-
+            const stockItem = stock.find(s => s.id == item.id)
             return db.addSale({
                 device: item.name,
-                brand: stockItem.brand,
+                brand: '',//stockItem?.brand || '',
                 model: stockItem.model,
                 condition: stockItem.state || "Usado",
                 sale_price: item.price * item.quantity,
@@ -2612,7 +2607,7 @@ async function finalizeSale() {
 
         // Atualizar estoque
         const stockPromises = cart.map(async (item) => {
-            const stockItem = stock.find(s => s.id === item.id)
+            const stockItem = stock.find(s => s.id == item.id)
             const newQuantity = stockItem.quantity - item.quantity
 
             return db.updateStock(item.id, {
