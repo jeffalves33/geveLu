@@ -194,6 +194,8 @@ async function loadAllData() {
         updateFinancialTables()
         updateServicesList()
         updateSalesList()
+        updateTodaysSales()
+        loadProductsGrid()
 
         // Carregar opções de peças
         loadPartsOptions()
@@ -233,7 +235,7 @@ function updateDashboard() {
     document.getElementById("pendingServices").textContent = `${pendingServices} serviços pendentes`
 
     // Atualizar métricas de vendas
-    const totalProfit = sales.reduce((sum, s) => sum + (s.profit || 0), 0)
+    const totalProfit = sales.reduce((sum, s) => sum + (s.profit || 0), 0)    
     const averageTicket = sales.length > 0 ? salesRevenue / sales.length : 0
     const averageMargin = salesRevenue > 0 ? (totalProfit / salesRevenue) * 100 : 0
 
@@ -2575,6 +2577,7 @@ async function finalizeSale() {
         showToast("Carrinho vazio", "error")
         return
     }
+    console.log("cart: ", cart)
 
     const customerName = document.getElementById("pdvCustomerName").value.trim()
     const paymentMethod = document.getElementById("paymentMethod").value
@@ -2601,7 +2604,7 @@ async function finalizeSale() {
     try {
         // Criar a venda principal
         const saleData = {
-            customer_name: customerName || "Cliente não identificado",
+            customer_name: customerName || "-",
             total_amount: total,
             subtotal: subtotal,
             discount_percent: discountPercent,
@@ -2627,6 +2630,8 @@ async function finalizeSale() {
                 model: stockItem.model,
                 condition: stockItem.state || "Usado",
                 sale_price: item.price * item.quantity,
+                purchase_price: stockItem.purchase_price * item.quantity,
+                profit: (item.price - stockItem.purchase_price) * item.quantity,
                 customer_name: customerName || null,
                 notes: `PDV - ${paymentMethod} - Desconto: ${discountPercent}%`,
                 stock_item_id: item.id
@@ -2671,10 +2676,10 @@ async function finalizeSale() {
         document.getElementById("discountPercent").value = ""
 
         // Atualizar displays
+        await loadAllData()
         updateDashboard()
         updateCartDisplay()
         updateCartTotals()
-        await loadAllData() // Recarregar todos os dados
         updateTodaysSales()
 
         // Habilitar impressão
@@ -2690,7 +2695,6 @@ async function finalizeSale() {
 
 // Mostrar/ocultar campos de pagamento
 function togglePaymentFields(paymentMethod) {
-    console.log("togglePaymentFields chamada com:", paymentMethod)
     const cashFields = document.getElementById("cashPaymentFields")
 
     if (paymentMethod === "dinheiro") {
