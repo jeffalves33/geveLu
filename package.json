@@ -1,7 +1,7 @@
 {
-    "name": "techcell-manager",
+    "name": "modaltech",
     "version": "1.0.0",
-    "description": "Sistema de controle para negócio de conserto de celulares",
+    "description": "Sistemas de gestão sob medida para seu negócio",
     "main": "src/main.js",
     "scripts": {
         "start": "electron .",
