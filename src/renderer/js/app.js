@@ -69,6 +69,23 @@ function setupEventListeners() {
         })
     })
 
+    //Carrinho PDV
+    // Forma de pagamento
+    document.getElementById("paymentMethod").addEventListener("change", function () {
+        togglePaymentFields(this.value)
+    })
+
+    // Valor recebido
+    document.getElementById("amountReceived").addEventListener("input", function () {
+        calculateChange()
+    })
+
+    // Desconto também deve recalcular o troco
+    document.getElementById("discountPercent").addEventListener("input", function () {
+        updateCartTotals()
+        calculateChange()
+    })
+
     // NOVOS EVENT LISTENERS:
 
     // Botões de salvar
@@ -1082,9 +1099,9 @@ function generateServicePDF(serviceId) {
 
         // Informações da empresa
         const companyInfo = {
-            name: 'ASSISTÊNCIA TÉCNICA',
-            subtitle: 'Serviços especializados em smartphones',
-            phone: '(27) 99999-9999',
+            name: 'Naju Smart',
+            subtitle: 'Especializado em manutenção de celulares',
+            phone: '(27) 99652-2752',
             email: 'contato@assistencia.com',
             address: 'São Mateus - ES'
         };
@@ -1349,7 +1366,7 @@ function generateServicePrint(serviceId) {
 
         // Informações da empresa (mesmas do PDF)
         const companyInfo = {
-            name: 'ASSISTÊNCIA TÉCNICA',
+            name: 'Naju Smart',
             subtitle: 'Serviços especializados em smartphones',
             phone: '(27) 99999-9999',
             email: 'contato@assistencia.com',
@@ -1994,8 +2011,6 @@ function generatePDFContent(service, companyInfo) {
                 </div>
                 <div style="text-align: right; font-size: 10px;">
                     <p style="margin: 2px 0;">Tel: ${companyInfo.phone}</p>
-                    <p style="margin: 2px 0;">Email: ${companyInfo.email}</p>
-                    <p style="margin: 2px 0;">${companyInfo.address}</p>
                 </div>
             </div>
 
@@ -2034,7 +2049,6 @@ function generatePDFContent(service, companyInfo) {
                 <div style="border: 1px solid #ddd; padding: 10px; background-color: #fafafa;">
                     <p style="margin: 5px 0;"><strong>Valor do Serviço:</strong> R$ ${(service.value || 0).toFixed(2)}</p>
                     <p style="margin: 5px 0;"><strong>Data de Entrega Prevista:</strong> ${service.delivery_date ? formatDate(service.delivery_date) : 'A definir'}</p>
-                    <p style="margin: 5px 0;"><strong>Status:</strong> ${service.status}</p>
                     ${service.notes ? `<p style="margin: 5px 0;"><strong>Observações:</strong> ${service.notes}</p>` : ''}
                 </div>
             </div>
@@ -2050,7 +2064,7 @@ function generatePDFContent(service, companyInfo) {
                 </ul>
             </div>
 
-            <br/><br/>
+            <br/><br/><br/><br/>
 
             <!-- Área de Assinatura -->
             <div style="margin-top: 40px; display: flex; justify-content: space-between;">
@@ -2259,6 +2273,7 @@ function initializePDV() {
     updateCartDisplay()
     updateTodaysSales()
     setupPDVEventListeners()
+    document.getElementById("cashPaymentFields").style.display = "none"
 }
 
 // Setup dos event listeners específicos do PDV
@@ -2534,6 +2549,8 @@ function updateCartTotals() {
     if (finalizeSaleBtn) {
         finalizeSaleBtn.disabled = cart.length === 0 || total <= 0
     }
+    // Recalcular troco quando totais mudarem
+    calculateChange()
 }
 
 // Limpar carrinho
@@ -2542,6 +2559,10 @@ function clearCart() {
     cart = []
     document.getElementById("pdvCustomerName").value = ""
     document.getElementById("discountPercent").value = ""
+    document.getElementById("paymentMethod").value = "selecione"
+    document.getElementById("amountReceived").value = ""
+    document.getElementById("changeAmount").textContent = "R$ 0,00"
+    document.getElementById("cashPaymentFields").style.display = "none"
     updateCartDisplay()
     updateCartTotals()
     showToast("Carrinho limpo", "info")
@@ -2566,6 +2587,15 @@ async function finalizeSale() {
     if (total <= 0) {
         showToast("Valor total deve ser maior que zero", "error")
         return
+    }
+
+    // Validar pagamento em dinheiro
+    if (paymentMethod === "dinheiro") {
+        const amountReceived = parseFloat(document.getElementById("amountReceived").value || 0)
+        if (amountReceived < total) {
+            showToast("Valor recebido insuficiente", "error")
+            return
+        }
     }
 
     try {
@@ -2658,6 +2688,49 @@ async function finalizeSale() {
     }
 }
 
+// Mostrar/ocultar campos de pagamento
+function togglePaymentFields(paymentMethod) {
+    console.log("togglePaymentFields chamada com:", paymentMethod)
+    const cashFields = document.getElementById("cashPaymentFields")
+
+    if (paymentMethod === "dinheiro") {
+        cashFields.style.display = "block"
+        document.getElementById("amountReceived").required = true
+    } else {
+        cashFields.style.display = "none"
+        document.getElementById("amountReceived").required = false
+        document.getElementById("amountReceived").value = ""
+        document.getElementById("changeAmount").textContent = "R$ 0,00"
+    }
+}
+
+// Calcular troco
+function calculateChange() {
+    const paymentMethod = document.getElementById("paymentMethod").value
+
+    if (paymentMethod !== "dinheiro") {
+        document.getElementById("changeAmount").textContent = "R$ 0,00"
+        return
+    }
+
+    const total = parseFloat(document.getElementById("cartTotal").textContent.replace(/[^\d,.-]/g, "").replace(".", "").replace(",", "."))
+    const amountReceived = parseFloat(document.getElementById("amountReceived").value || 0)
+
+    const change = amountReceived - total
+
+    const changeElement = document.getElementById("changeAmount")
+
+    if (change < 0) {
+        changeElement.textContent = formatCurrency(Math.abs(change))
+        changeElement.className = "fw-bold text-danger"
+        changeElement.parentElement.innerHTML = `<span>Faltam:</span><span id="changeAmount" class="fw-bold text-danger">${formatCurrency(Math.abs(change))}</span>`
+    } else {
+        changeElement.textContent = formatCurrency(change)
+        changeElement.className = "fw-bold text-success"
+        changeElement.parentElement.innerHTML = `<span>Troco:</span><span id="changeAmount" class="fw-bold text-success">${formatCurrency(change)}</span>`
+    }
+}
+
 // Atualizar vendas do dia
 function updateTodaysSales() {
     const today = new Date().toDateString()
@@ -2707,12 +2780,12 @@ function updateTodaySalesTable(todaySales) {
                         ${getPaymentMethodText(sale.notes)}
                     </span>
                 </td>
-                <td>
+                <!--<td>
                     <button class="btn btn-sm btn-outline-primary" 
                             onclick="reprintSaleReceipt(${sale.id})" title="Reimprimir">
                         <i class="bi bi-printer"></i>
                     </button>
-                </td>
+                </td>-->
             </tr>
         `
     }).join("")
@@ -2812,7 +2885,7 @@ function generateReceipt(sale) {
         </head>
         <body>
             <div class="header">
-                <h2>ASSISTÊNCIA TÉCNICA</h2>
+                <h2>Naju Smart</h2>
                 <p>Recibo de Venda</p>
                 <p>Venda #${sale.id}</p>
                 <p>${sale.date}</p>
@@ -2858,7 +2931,7 @@ function generateReceipt(sale) {
 
             <div class="footer">
                 <p>Obrigado pela preferência!</p>
-                <small>Sistema de Gestão - PDV</small>
+                <small>Sistema de Gestão - Modaltech</small>
             </div>
 
             <script>

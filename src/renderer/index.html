@@ -635,11 +635,25 @@
                                     <div class="mb-3">
                                         <label class="form-label">Forma de Pagamento</label>
                                         <select class="form-select form-select-sm" id="paymentMethod">
+                                            <option value="selecione">selecione</option>
                                             <option value="dinheiro">Dinheiro</option>
                                             <option value="cartao">Cartão</option>
                                             <option value="pix">PIX</option>
                                             <option value="transferencia">Transferência</option>
                                         </select>
+                                    </div>
+
+                                    <div class="mb-3" id="cashPaymentFields" style="display: none;">
+                                        <label for="amountReceived" class="form-label">Valor Recebido</label>
+                                        <div class="input-group input-group-sm">
+                                            <span class="input-group-text">R$</span>
+                                            <input type="number" class="form-control" id="amountReceived"
+                                                placeholder="0,00" min="0" step="0.01">
+                                        </div>
+                                        <div class="d-flex justify-content-between mt-2 fw-bold text-success">
+                                            <span>Troco:</span>
+                                            <span id="changeAmount">R$ 0,00</span>
+                                        </div>
                                     </div>
 
                                     <!-- Botões de ação -->
@@ -690,7 +704,7 @@
                                                 <th>Itens</th>
                                                 <th>Total</th>
                                                 <th>Pagamento</th>
-                                                <th>Ações</th>
+                                                <!--<th>Ações</th>-->
                                             </tr>
                                         </thead>
                                         <tbody id="todaySalesTable">
