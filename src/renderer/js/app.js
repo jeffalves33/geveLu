@@ -234,6 +234,14 @@ function updateDashboard() {
 
     document.getElementById("pendingServices").textContent = `${pendingServices} serviços pendentes`
 
+    // Atualizar métricas de Serviços
+    const totalServicesProfit = serviceRevenue - services.reduce((sum, s) => sum + (s.parts || 0), 0)    
+    const averageTicketServices = services.length > 0 ? serviceRevenue / services.length : 0
+
+    document.getElementById("totalServicesValue").textContent = formatCurrency(serviceRevenue)
+    document.getElementById("totalServicesProfit").textContent = formatCurrency(totalServicesProfit)
+    document.getElementById("averageTicketServices").textContent = formatCurrency(averageTicketServices)
+
     // Atualizar métricas de vendas
     const totalProfit = sales.reduce((sum, s) => sum + (s.profit || 0), 0)    
     const averageTicket = sales.length > 0 ? salesRevenue / sales.length : 0
@@ -294,6 +302,7 @@ function updateServicesTable() {
             <td>${service.device}</td>
             <td>${service.problem}</td>
             <td>${formatCurrency(service.value)}</td>
+            <td>${formatCurrency(service.parts)}</td>
             <td>${getStatusBadge(service.status)}</td>
             <td>${service.delivery_date ? formatDate(service.delivery_date) : "-"}</td>
             <td>
@@ -430,7 +439,7 @@ function updateSalesList() {
         row.classList.add("d-flex", "justify-content-between", "align-items-center", "py-2", "border-bottom")
         row.innerHTML = `
             <div>
-                <p class="mb-1 fw-medium">${item.model} ${item.storage}G</p>
+                <p class="mb-1 fw-medium">${item.device ? item.device : '-'}</p>
                 <p class="mb-0 text-muted small">${item.condition}</p>
             </div>
             <div class="text-end">

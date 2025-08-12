@@ -33,46 +33,46 @@
 <body>
     <div class="container-fluid">
         <div class="d-flex justify-content-between align-items-center">
-        <!-- Navigation Tabs -->
-        <ul class="nav nav-tabs mb-1" id="mainTabs" role="tablist">
-            <li class="nav-item" role="presentation">
-                <button class="nav-link active" id="dashboard-tab" data-bs-toggle="tab" data-bs-target="#dashboard"
-                    type="button" role="tab">
-                    <i class="bi bi-speedometer2"></i> Geral
-                </button>
-            </li>
-            <li class="nav-item" role="presentation">
-                <button class="nav-link" id="services-tab" data-bs-toggle="tab" data-bs-target="#services" type="button"
-                    role="tab">
-                    <i class="bi bi-tools"></i> Serviços
-                </button>
-            </li>
-            <li class="nav-item" role="presentation">
-                <button class="nav-link" id="sales-tab" data-bs-toggle="tab" data-bs-target="#sales" type="button"
-                    role="tab">
-                    <i class="bi bi-phone"></i> Vendas
-                </button>
-            </li>
-            <li class="nav-item" role="presentation">
-                <button class="nav-link" id="stock-tab" data-bs-toggle="tab" data-bs-target="#stock" type="button"
-                    role="tab">
-                    <i class="bi bi-box"></i> Estoque
-                </button>
-            </li>
-            <li class="nav-item" role="presentation">
-                <button class="nav-link" id="financial-tab" data-bs-toggle="tab" data-bs-target="#financial"
-                    type="button" role="tab">
-                    <i class="bi bi-currency-dollar"></i> Financeiro
-                </button>
-            </li>
-            <li class="nav-item" role="presentation">
-                <button class="nav-link" id="pdv-tab" data-bs-toggle="tab" data-bs-target="#pdv" type="button"
-                    role="tab">
-                    <i class="bi bi-calculator"></i> PDV
-                </button>
-            </li>
-        </ul>
-        <img src="img/logotipo.png" alt="Logo" style="height: 10px;">
+            <!-- Navigation Tabs -->
+            <ul class="nav nav-tabs mb-1" id="mainTabs" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active" id="dashboard-tab" data-bs-toggle="tab" data-bs-target="#dashboard"
+                        type="button" role="tab">
+                        <i class="bi bi-speedometer2"></i> Geral
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="services-tab" data-bs-toggle="tab" data-bs-target="#services"
+                        type="button" role="tab">
+                        <i class="bi bi-tools"></i> Serviços
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="sales-tab" data-bs-toggle="tab" data-bs-target="#sales" type="button"
+                        role="tab">
+                        <i class="bi bi-phone"></i> Vendas
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="stock-tab" data-bs-toggle="tab" data-bs-target="#stock" type="button"
+                        role="tab">
+                        <i class="bi bi-box"></i> Estoque
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="financial-tab" data-bs-toggle="tab" data-bs-target="#financial"
+                        type="button" role="tab">
+                        <i class="bi bi-currency-dollar"></i> Financeiro
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="pdv-tab" data-bs-toggle="tab" data-bs-target="#pdv" type="button"
+                        role="tab">
+                        <i class="bi bi-calculator"></i> PDV
+                    </button>
+                </li>
+            </ul>
+            <img src="img/logotipo.png" alt="Logo" style="height: 10px;">
         </div>
 
         <!-- Tab Content -->
@@ -175,6 +175,36 @@
                     </button>
                 </div>
 
+                <div class="row g-3 mb-4">
+                    <div class="col-md-4">
+                        <div class="card bg-primary text-white">
+                            <div class="card-body">
+                                <h6>Total em Serviços</h6>
+                                <h4 id="totalServicesValue">R$ 0,00</h4>
+                                <small>Bruto dos Entregues</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card bg-success text-white">
+                            <div class="card-body">
+                                <h6>Lucro Total</h6>
+                                <h4 id="totalServicesProfit">R$ 0,00</h4>
+                                <small>Ganhos dos Entregues</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card bg-info text-white">
+                            <div class="card-body">
+                                <h6>Ticket Médio</h6>
+                                <h4 id="averageTicketServices">R$ 0,00</h4>
+                                <small>Por Serviço Entregues</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
                 <div class="card">
                     <div class="card-header">
                         <div class="row">
@@ -197,6 +227,7 @@
                                         <th>Aparelho</th>
                                         <th>Problema</th>
                                         <th>Valor</th>
+                                        <th>Peças</th>
                                         <th>Status</th>
                                         <th>Entrega</th>
                                         <th>Ações</th>
@@ -761,7 +792,7 @@
                                         Valor do serviço
                                         <i class="bi bi-info-circle text-muted ms-1" data-bs-toggle="tooltip"
                                             data-bs-placement="top"
-                                            title="Aqui é apenas o valor do seu serviço. Ao final esse valor será somado com o valor das 'peças usadas' e será o valor cobrado."
+                                            title="Coloque aqui o valor total: valor de serviço + peças usadas."
                                             style="cursor: help;">
                                         </i>
                                     </label>
