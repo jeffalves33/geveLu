@@ -10,6 +10,12 @@ let selectedParts = []
 let cart = []
 let currentSale = null
 
+let currentDateFilters = {
+    services: { type: 'today', startDate: null, endDate: null },
+    sales: { type: 'today', startDate: null, endDate: null },
+    financial: { type: 'today', startDate: null, endDate: null }
+};
+
 // Inicialização da aplicação
 document.addEventListener("DOMContentLoaded", () => {
     initializeApp()
@@ -22,6 +28,7 @@ async function initializeApp() {
 
     // Carregar dados
     await loadAllData()
+    initializeDateFilters();
 
     // Atualizar dashboard
     updateDashboard()
@@ -29,6 +36,47 @@ async function initializeApp() {
     if (document.querySelector('#pdv-tab.active')) {
         initializePDV()
     }
+}
+
+function setupDateFilterListeners() {
+    // Filtros de data para serviços
+    document.getElementById('servicesDateFilter').addEventListener('change', function () {
+        handleDateFilterChange('services', this.value);
+    });
+
+    document.getElementById('servicesStartDate').addEventListener('change', function () {
+        handleCustomDateChange('services');
+    });
+
+    document.getElementById('servicesEndDate').addEventListener('change', function () {
+        handleCustomDateChange('services');
+    });
+
+    // Filtros de data para vendas
+    document.getElementById('salesDateFilter').addEventListener('change', function () {
+        handleDateFilterChange('sales', this.value);
+    });
+
+    document.getElementById('salesStartDate').addEventListener('change', function () {
+        handleCustomDateChange('sales');
+    });
+
+    document.getElementById('salesEndDate').addEventListener('change', function () {
+        handleCustomDateChange('sales');
+    });
+
+    // Filtros de data para financeiro
+    document.getElementById('financialDateFilter').addEventListener('change', function () {
+        handleDateFilterChange('financial', this.value);
+    });
+
+    document.getElementById('financialStartDate').addEventListener('change', function () {
+        handleCustomDateChange('financial');
+    });
+
+    document.getElementById('financialEndDate').addEventListener('change', function () {
+        handleCustomDateChange('financial');
+    });
 }
 
 function setupEventListeners() {
@@ -63,6 +111,9 @@ function setupEventListeners() {
     document.querySelectorAll('[data-bs-toggle="tab"]').forEach((tab) => {
         tab.addEventListener("shown.bs.tab", (event) => {
             const target = event.target.getAttribute("data-bs-target")
+            if (target === "#services") applyDateFilters('services');
+            if (target === "#sales") applyDateFilters('sales');
+            if (target === "#financial") applyDateFilters('financial');
             if (target === "#stock") {
                 loadStockDevices()
             }
@@ -177,6 +228,7 @@ function setupEventListeners() {
     });
 
     initializePDV()
+    setupDateFilterListeners();
 }
 
 async function loadAllData() {
@@ -235,7 +287,7 @@ function updateDashboard() {
     document.getElementById("pendingServices").textContent = `${pendingServices} serviços pendentes`
 
     // Atualizar métricas de Serviços
-    const totalServicesProfit = serviceRevenue - services.reduce((sum, s) => sum + (s.parts || 0), 0)    
+    const totalServicesProfit = serviceRevenue - services.reduce((sum, s) => sum + (s.parts || 0), 0)
     const averageTicketServices = services.length > 0 ? serviceRevenue / services.length : 0
 
     document.getElementById("totalServicesValue").textContent = formatCurrency(serviceRevenue)
@@ -243,7 +295,7 @@ function updateDashboard() {
     document.getElementById("averageTicketServices").textContent = formatCurrency(averageTicketServices)
 
     // Atualizar métricas de vendas
-    const totalProfit = sales.reduce((sum, s) => sum + (s.profit || 0), 0)    
+    const totalProfit = sales.reduce((sum, s) => sum + (s.profit || 0), 0)
     const averageTicket = sales.length > 0 ? salesRevenue / sales.length : 0
     const averageMargin = salesRevenue > 0 ? (totalProfit / salesRevenue) * 100 : 0
 
@@ -289,7 +341,9 @@ function updateServicesTable() {
     const tbody = document.getElementById("servicesTable")
     tbody.innerHTML = ""
 
-    services.forEach((service) => {
+    const filteredServices = getFilteredServices();
+
+    filteredServices.forEach((service) => {
         const row = document.createElement("tr")
         row.innerHTML = `
             <td>#${service.id}</td>
@@ -337,7 +391,9 @@ function updateSalesTable() {
     const tbody = document.getElementById("salesTable")
     tbody.innerHTML = ""
 
-    sales.forEach((sale) => {
+    const filteredSales = getFilteredSales();
+
+    filteredSales.forEach((sale) => {
         const row = document.createElement("tr")
         row.innerHTML = `
             <td>#${sale.id}</td>
@@ -409,6 +465,52 @@ function updateFinancialTables() {
     updatePendingTable()
 }
 
+function updateSalesMetrics() {
+    const filteredSales = getFilteredSales();
+    const salesRevenue = filteredSales.reduce((sum, s) => sum + (s.sale_price || 0), 0);
+    const totalProfit = filteredSales.reduce((sum, s) => sum + (s.profit || 0), 0);
+    const averageTicket = filteredSales.length > 0 ? salesRevenue / filteredSales.length : 0;
+    const averageMargin = salesRevenue > 0 ? (totalProfit / salesRevenue) * 100 : 0;
+
+    document.getElementById("totalSalesValue").textContent = formatCurrency(salesRevenue);
+    document.getElementById("totalSalesCount").textContent = `${filteredSales.length} aparelhos vendidos`;
+    document.getElementById("totalProfit").textContent = formatCurrency(totalProfit);
+    document.getElementById("averageMargin").textContent = `Margem média: ${averageMargin.toFixed(1)}%`;
+    document.getElementById("averageTicket").textContent = formatCurrency(averageTicket);
+}
+
+function updateFinancialMetrics() {
+    const filteredTransactions = getFilteredTransactions();
+    const totalIncome = filteredTransactions
+        .filter(t => t.type === "entrada" && t.status === "pago")
+        .reduce((sum, t) => sum + t.amount, 0);
+
+    const totalExpenses = filteredTransactions
+        .filter(t => t.type === "saida" && t.status === "pago")
+        .reduce((sum, t) => sum + t.amount, 0);
+
+    const totalPending = filteredTransactions
+        .filter(t => t.type === "entrada" && t.status === "pendente")
+        .reduce((sum, t) => sum + t.amount, 0);
+
+    document.getElementById("totalIncome").textContent = formatCurrency(totalIncome);
+    document.getElementById("totalExpenses").textContent = formatCurrency(totalExpenses);
+    document.getElementById("totalPending").textContent = formatCurrency(totalPending);
+    document.getElementById("netBalance").textContent = formatCurrency(totalIncome - totalExpenses);
+}
+
+function updateServicesMetrics() {
+    const filteredServices = getFilteredServices();
+    const serviceRevenue = filteredServices.filter(s => s.status === "Entregue").reduce((sum, s) => sum + (s.value || 0), 0);
+    const totalServicesProfit = serviceRevenue - filteredServices.reduce((sum, s) => sum + (s.parts || 0), 0);
+    const deliveredServices = filteredServices.filter(s => s.status === "Entregue");
+    const averageTicketServices = deliveredServices.length > 0 ? serviceRevenue / deliveredServices.length : 0;
+
+    document.getElementById("totalServicesValue").textContent = formatCurrency(serviceRevenue);
+    document.getElementById("totalServicesProfit").textContent = formatCurrency(totalServicesProfit);
+    document.getElementById("averageTicketServices").textContent = formatCurrency(averageTicketServices);
+}
+
 function updateServicesList() {
     const tbody = document.getElementById("recentServices")
     tbody.innerHTML = ""
@@ -455,7 +557,9 @@ function updateAllTransactionsTable() {
     const tbody = document.getElementById("allTransactionsTable")
     tbody.innerHTML = ""
 
-    transactions.forEach((transaction) => {
+    const filteredTransactions = getFilteredTransactions();
+
+    filteredTransactions.forEach((transaction) => {
         const row = document.createElement("tr")
         row.innerHTML = transaction.status != "pago" ?
             `
@@ -518,12 +622,14 @@ function updateAllTransactionsTable() {
 }
 
 function updateIncomeTable() {
-    const tbody = document.getElementById("incomeTable")
-    tbody.innerHTML = ""
+    const tbody = document.getElementById("incomeTable");
+    tbody.innerHTML = "";
 
-    const incomeTransactions = transactions.filter((t) => t.type === "entrada")
+    const filteredTransactions = getFilteredTransactions();
+    const incomeTransactions = filteredTransactions.filter((t) => t.type === "entrada");
+
     incomeTransactions.forEach((transaction) => {
-        const row = document.createElement("tr")
+        const row = document.createElement("tr");
         row.innerHTML = `
             <td>${formatDate(transaction.created_at)}</td>
             <td>${getCategoryLabel(transaction.category)}</td>
@@ -531,36 +637,40 @@ function updateIncomeTable() {
             <td>${transaction.customer_name || "-"}</td>
             <td class="text-success">+${formatCurrency(transaction.amount)}</td>
             <td>${getStatusBadge(transaction.status)}</td>
-        `
-        tbody.appendChild(row)
-    })
+        `;
+        tbody.appendChild(row);
+    });
 }
 
 function updateExpensesTable() {
-    const tbody = document.getElementById("expensesTable")
-    tbody.innerHTML = ""
+    const tbody = document.getElementById("expensesTable");
+    tbody.innerHTML = "";
 
-    const expenseTransactions = transactions.filter((t) => t.type === "saida")
+    const filteredTransactions = getFilteredTransactions();
+    const expenseTransactions = filteredTransactions.filter((t) => t.type === "saida");
+
     expenseTransactions.forEach((transaction) => {
-        const row = document.createElement("tr")
+        const row = document.createElement("tr");
         row.innerHTML = `
             <td>${formatDate(transaction.created_at)}</td>
             <td>${getCategoryLabel(transaction.category)}</td>
             <td>${transaction.description}</td>
             <td class="text-danger">-${formatCurrency(transaction.amount)}</td>
             <td>${getStatusBadge(transaction.status)}</td>
-        `
-        tbody.appendChild(row)
-    })
+        `;
+        tbody.appendChild(row);
+    });
 }
 
 function updatePendingTable() {
-    const tbody = document.getElementById("pendingTable")
-    tbody.innerHTML = ""
+    const tbody = document.getElementById("pendingTable");
+    tbody.innerHTML = "";
 
-    const pendingTransactions = transactions.filter((t) => t.status === "pendente")
+    const filteredTransactions = getFilteredTransactions();
+    const pendingTransactions = filteredTransactions.filter((t) => t.status === "pendente");
+
     pendingTransactions.forEach((transaction) => {
-        const row = document.createElement("tr")
+        const row = document.createElement("tr");
         row.innerHTML = `
             <td>${formatDate(transaction.created_at)}</td>
             <td>${getCategoryLabel(transaction.category)}</td>
@@ -568,9 +678,134 @@ function updatePendingTable() {
             <td>${transaction.customer_name || "-"}</td>
             <td class="text-warning">${formatCurrency(transaction.amount)}</td>
             <td>${getStatusBadge(transaction.status)}</td>
-        `
-        tbody.appendChild(row)
-    })
+        `;
+        tbody.appendChild(row);
+    });
+}
+
+// Funções de filtro de data
+function getFilteredTransactions() {
+    const filter = currentDateFilters.financial;
+    if (filter.type === 'all') return transactions;
+
+    return transactions.filter(transaction => {
+        return isDateInRange(transaction.created_at, filter.startDate, filter.endDate);
+    });
+}
+
+function getFilteredSales() {
+    const filter = currentDateFilters.sales;
+    if (filter.type === 'all') return sales;
+
+    return sales.filter(sale => {
+        return isDateInRange(sale.created_at, filter.startDate, filter.endDate);
+    });
+}
+
+function getFilteredServices() {
+    const filter = currentDateFilters.services;
+    if (filter.type === 'all') return services;
+
+    return services.filter(service => {
+        // Usar created_at ou delivery_date para filtrar
+        const serviceDate = service.created_at || service.delivery_date;
+        return isDateInRange(serviceDate, filter.startDate, filter.endDate);
+    });
+}
+
+function applyDateFilters(section) {
+    switch (section) {
+        case 'services':
+            updateServicesTable();
+            updateServicesMetrics();
+            break;
+        case 'sales':
+            updateSalesTable();
+            updateSalesMetrics();
+            break;
+        case 'financial':
+            updateFinancialTables();
+            updateFinancialMetrics();
+            break;
+    }
+}
+
+function isDateInRange(dateStr, startDate, endDate) {
+    if (!dateStr) return false;
+
+    const date = new Date(dateStr).toISOString().split('T')[0];
+    return date >= startDate && date <= endDate;
+}
+
+function getDateRange(filterType) {
+    const today = new Date();
+    let startDate, endDate;
+
+    switch (filterType) {
+        case 'today':
+            startDate = endDate = today.toISOString().split('T')[0];
+            break;
+
+        case 'week':
+            const startOfWeek = new Date(today);
+            startOfWeek.setDate(today.getDate() - today.getDay());
+            const endOfWeek = new Date(startOfWeek);
+            endOfWeek.setDate(startOfWeek.getDate() + 6);
+
+            startDate = startOfWeek.toISOString().split('T')[0];
+            endDate = endOfWeek.toISOString().split('T')[0];
+            break;
+
+        case 'month':
+            startDate = new Date(today.getFullYear(), today.getMonth(), 1).toISOString().split('T')[0];
+            endDate = new Date(today.getFullYear(), today.getMonth() + 1, 0).toISOString().split('T')[0];
+            break;
+
+        case 'all':
+            startDate = '1900-01-01';
+            endDate = '2099-12-31';
+            break;
+
+        default:
+            startDate = endDate = today.toISOString().split('T')[0];
+    }
+
+    return { startDate, endDate };
+}
+
+function handleCustomDateChange(section) {
+    let startDate = document.getElementById(`${section}StartDate`).value;
+    let endDate = document.getElementById(`${section}EndDate`).value;
+
+    if (startDate && endDate) {
+        if (startDate > endDate) {
+            // opção A: inverter
+            [startDate, endDate] = [endDate, startDate];
+            // opção B (alternativa): alert('Data inicial não pode ser maior que a final');
+        }
+        currentDateFilters[section] = { type: 'custom', startDate, endDate };
+        applyDateFilters(section);
+    }
+}
+
+
+function handleDateFilterChange(section, filterType) {
+    const customRangeElement = document.getElementById(`${section}CustomDateRange`);
+
+    if (filterType === 'custom') {
+        customRangeElement.style.display = 'flex';
+    } else {
+        customRangeElement.style.display = 'none';
+
+        const { startDate, endDate } = getDateRange(filterType);
+        currentDateFilters[section] = {
+            type: filterType,
+            startDate: startDate,
+            endDate: endDate
+        };
+
+        applyDateFilters(section);
+    }
 }
 
 // Funções de filtro
@@ -605,6 +840,24 @@ function filterStock() {
 
         row.style.display = matchesSearch && matchesCategory ? "" : "none"
     })
+}
+
+function initializeDateFilters() {
+    const today = new Date().toISOString().split('T')[0];
+
+    // Definir datas padrão para os campos customizados
+    ['servicesStartDate', 'servicesEndDate', 'salesStartDate', 'salesEndDate', 'financialStartDate', 'financialEndDate'].forEach(id => {
+        document.getElementById(id).value = today;
+    });
+    document.getElementById('servicesDateFilter').value = 'today';
+    document.getElementById('salesDateFilter').value = 'today';
+    document.getElementById('financialDateFilter').value = 'today';
+
+
+    // Aplicar filtro de hoje por padrão
+    currentDateFilters.services = { type: 'today', startDate: today, endDate: today };
+    currentDateFilters.sales = { type: 'today', startDate: today, endDate: today };
+    currentDateFilters.financial = { type: 'today', startDate: today, endDate: today };
 }
 
 // Funções de modal
@@ -2586,7 +2839,6 @@ async function finalizeSale() {
         showToast("Carrinho vazio", "error")
         return
     }
-    console.log("cart: ", cart)
 
     const customerName = document.getElementById("pdvCustomerName").value.trim()
     const paymentMethod = document.getElementById("paymentMethod").value
@@ -2630,6 +2882,8 @@ async function finalizeSale() {
             created_at: new Date().toISOString()
         }
 
+        const discountFactor = 1 - (discountPercent / 100);
+
         // Registrar cada item como venda individual (compatível com sua tabela sales)
         const salePromises = cart.map(async (item) => {
             const stockItem = stock.find(s => s.id == item.id)
@@ -2638,9 +2892,11 @@ async function finalizeSale() {
                 brand: '',//stockItem?.brand || '',
                 model: stockItem.model,
                 condition: stockItem.state || "Usado",
-                sale_price: item.price * item.quantity,
+                sale_price: (item.price * item.quantity) * discountFactor,
                 purchase_price: stockItem.purchase_price * item.quantity,
-                profit: (item.price - stockItem.purchase_price) * item.quantity,
+                profit: ((item.price * discountFactor) - stockItem.purchase_price) * item.quantity,
+                discount_percent: discountPercent,
+                discount_amount_item: (item.price * item.quantity) * (1 - discountFactor),
                 customer_name: customerName || null,
                 notes: `PDV - ${paymentMethod} - Desconto: ${discountPercent}%`,
                 stock_item_id: item.id

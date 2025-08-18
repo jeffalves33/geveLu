@@ -170,9 +170,31 @@
             <div class="tab-pane fade" id="services" role="tabpanel">
                 <div class="d-flex justify-content-between align-items-center mb-3">
                     <h4>Gerenciar Serviços</h4>
-                    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#serviceModal">
-                        <i class="bi bi-plus"></i> Novo Serviço
-                    </button>
+                    <div class="d-flex align-items-center gap-3">
+                        <!-- Filtro de Data para Serviços -->
+                        <div class="d-flex align-items-center gap-2">
+                            <label for="servicesDateFilter" class="form-label mb-0 text-nowrap">Período:</label>
+                            <select class="form-select form-select-sm" id="servicesDateFilter" style="width: auto;">
+                                <option value="today">Hoje</option>
+                                <option value="week">Esta Semana</option>
+                                <option value="month">Este Mês</option>
+                                <option value="custom">Personalizado</option>
+                                <option value="all">Todos</option>
+                            </select>
+                        </div>
+                        <!-- Campos de data customizada (inicialmente ocultos) -->
+                        <div id="servicesCustomDateRange" class="d-flex align-items-center gap-2"
+                            style="display: none;">
+                            <input type="date" class="form-control form-control-sm" id="servicesStartDate"
+                                style="width: 150px;">
+                            <span class="text-muted">até</span>
+                            <input type="date" class="form-control form-control-sm" id="servicesEndDate"
+                                style="width: 150px;">
+                        </div>
+                        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#serviceModal">
+                            <i class="bi bi-plus"></i> Novo Serviço
+                        </button>
+                    </div>
                 </div>
 
                 <div class="row g-3 mb-4">
@@ -247,9 +269,30 @@
             <div class="tab-pane fade" id="sales" role="tabpanel">
                 <div class="d-flex justify-content-between align-items-center mb-3">
                     <h4>Gerenciar Vendas</h4>
-                    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#saleModal">
-                        <i class="bi bi-plus"></i> Nova Venda
-                    </button>
+                    <div class="d-flex align-items-center gap-3">
+                        <!-- Filtro de Data para Vendas -->
+                        <div class="d-flex align-items-center gap-2">
+                            <label for="salesDateFilter" class="form-label mb-0 text-nowrap">Período:</label>
+                            <select class="form-select form-select-sm" id="salesDateFilter" style="width: auto;">
+                                <option value="today">Hoje</option>
+                                <option value="week">Esta Semana</option>
+                                <option value="month">Este Mês</option>
+                                <option value="custom">Personalizado</option>
+                                <option value="all">Todos</option>
+                            </select>
+                        </div>
+                        <!-- Campos de data customizada (inicialmente ocultos) -->
+                        <div id="salesCustomDateRange" class="d-flex align-items-center gap-2" style="display: none;">
+                            <input type="date" class="form-control form-control-sm" id="salesStartDate"
+                                style="width: 150px;">
+                            <span class="text-muted">até</span>
+                            <input type="date" class="form-control form-control-sm" id="salesEndDate"
+                                style="width: 150px;">
+                        </div>
+                        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#saleModal">
+                            <i class="bi bi-plus"></i> Nova Venda
+                        </button>
+                    </div>
                 </div>
 
                 <div class="row g-3 mb-4">
@@ -413,9 +456,31 @@
             <div class="tab-pane fade" id="financial" role="tabpanel">
                 <div class="d-flex justify-content-between align-items-center mb-3">
                     <h4>Controle Financeiro</h4>
-                    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#transactionModal">
-                        <i class="bi bi-plus"></i> Nova Transação
-                    </button>
+                    <div class="d-flex align-items-center gap-3">
+                        <!-- Filtro de Data para Financeiro -->
+                        <div class="d-flex align-items-center gap-2">
+                            <label for="financialDateFilter" class="form-label mb-0 text-nowrap">Período:</label>
+                            <select class="form-select form-select-sm" id="financialDateFilter" style="width: auto;">
+                                <option value="today">Hoje</option>
+                                <option value="week">Esta Semana</option>
+                                <option value="month">Este Mês</option>
+                                <option value="custom">Personalizado</option>
+                                <option value="all">Todos</option>
+                            </select>
+                        </div>
+                        <!-- Campos de data customizada (inicialmente ocultos) -->
+                        <div id="financialCustomDateRange" class="d-flex align-items-center gap-2"
+                            style="display: none;">
+                            <input type="date" class="form-control form-control-sm" id="financialStartDate"
+                                style="width: 150px;">
+                            <span class="text-muted">até</span>
+                            <input type="date" class="form-control form-control-sm" id="financialEndDate"
+                                style="width: 150px;">
+                        </div>
+                        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#transactionModal">
+                            <i class="bi bi-plus"></i> Nova Transação
+                        </button>
+                    </div>
                 </div>
 
                 <div class="row g-3 mb-4">
