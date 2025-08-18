@@ -141,6 +141,12 @@ function setupEventListeners() {
         calculateChange()
     })
 
+    // A receber -> quando marcar, esconder campos de dinheiro e ignorar troco
+    document.getElementById("salePending").addEventListener("change", function () {
+        togglePendingBehavior()
+    })
+
+
     // NOVOS EVENT LISTENERS:
 
     // Botões de salvar
@@ -428,13 +434,13 @@ function updateSalesTable() {
 }
 
 function updateStockTable() {
-  const tbody = document.getElementById("stockTable")
-  tbody.innerHTML = ""
+    const tbody = document.getElementById("stockTable")
+    tbody.innerHTML = ""
 
-  stock.forEach((item) => {
-    const row = document.createElement("tr")
-    row.dataset.quantity = item.quantity // <-- para ler depois se quiser
-    row.innerHTML = `
+    stock.forEach((item) => {
+        const row = document.createElement("tr")
+        row.dataset.quantity = item.quantity // <-- para ler depois se quiser
+        row.innerHTML = `
       <td>
         <div>
           <strong>${item.name}</strong><br>
@@ -459,8 +465,8 @@ function updateStockTable() {
         </div>
       </td>
     `
-    tbody.appendChild(row)
-  })
+        tbody.appendChild(row)
+    })
 }
 
 function updateFinancialTables() {
@@ -831,26 +837,26 @@ function filterSales(searchTerm) {
 }
 
 function filterStock() {
-  const searchTerm = document.getElementById("stockSearch").value.toLowerCase()
-  const categoryFilter = document.getElementById("stockCategoryFilter").value
-  const zeroOnly = document.getElementById("stockZeroOnly")?.checked // pode ser undefined se o checkbox não existir
-  const rows = document.querySelectorAll("#stockTable tr")
+    const searchTerm = document.getElementById("stockSearch").value.toLowerCase()
+    const categoryFilter = document.getElementById("stockCategoryFilter").value
+    const zeroOnly = document.getElementById("stockZeroOnly")?.checked // pode ser undefined se o checkbox não existir
+    const rows = document.querySelectorAll("#stockTable tr")
 
-  rows.forEach((row) => {
-    const text = row.textContent.toLowerCase()
-    const categoryCell = row.cells[1].textContent
-    const quantityText = row.cells[2].textContent.trim()
-    const quantity = parseInt(quantityText, 10) || 0
+    rows.forEach((row) => {
+        const text = row.textContent.toLowerCase()
+        const categoryCell = row.cells[1].textContent
+        const quantityText = row.cells[2].textContent.trim()
+        const quantity = parseInt(quantityText, 10) || 0
 
-    const matchesSearch = text.includes(searchTerm)
-    const matchesCategory =
-      categoryFilter === "all" ||
-      categoryCell.toLowerCase().includes(getCategoryLabel(categoryFilter).toLowerCase())
+        const matchesSearch = text.includes(searchTerm)
+        const matchesCategory =
+            categoryFilter === "all" ||
+            categoryCell.toLowerCase().includes(getCategoryLabel(categoryFilter).toLowerCase())
 
-    const matchesZero = !zeroOnly || quantity === 0
+        const matchesZero = !zeroOnly || quantity === 0
 
-    row.style.display = (matchesSearch && matchesCategory && matchesZero) ? "" : "none"
-  })
+        row.style.display = (matchesSearch && matchesCategory && matchesZero) ? "" : "none"
+    })
 }
 
 function initializeDateFilters() {
@@ -1249,8 +1255,6 @@ async function saveStock() {
         loadPartsOptions()
         loadStockDevices()
         updateDashboard()
-
-        console.log("Item cadastrado com sucesso!")
 
     } catch (error) {
         console.error("Error saving stock item:", error)
@@ -2835,13 +2839,12 @@ function clearCart() {
     document.getElementById("pdvCustomerName").value = ""
     document.getElementById("discountPercent").value = ""
     document.getElementById("paymentMethod").value = "selecione"
+    document.getElementById("salePending").checked = false
     document.getElementById("amountReceived").value = ""
     document.getElementById("changeAmount").textContent = "R$ 0,00"
     document.getElementById("cashPaymentFields").style.display = "none"
     updateCartDisplay()
     updateCartTotals()
-    showToast("Carrinho limpo", "info")
-
 }
 
 // Finalizar venda
@@ -2854,7 +2857,7 @@ async function finalizeSale() {
     const customerName = document.getElementById("pdvCustomerName").value.trim()
     const paymentMethod = document.getElementById("paymentMethod").value
     const discountPercent = parseFloat(document.getElementById("discountPercent").value || 0)
-
+    const isPending = document.getElementById("salePending")?.checked
     const subtotal = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0)
     const discountAmount = (subtotal * discountPercent) / 100
     const total = subtotal - discountAmount
@@ -2864,8 +2867,8 @@ async function finalizeSale() {
         return
     }
 
-    // Validar pagamento em dinheiro
-    if (paymentMethod === "dinheiro") {
+    // Validar pagamento em dinheiro SOMENTE quando NÃO estiver pendente
+    if (!isPending && paymentMethod === "dinheiro") {
         const amountReceived = parseFloat(document.getElementById("amountReceived").value || 0)
         if (amountReceived < total) {
             showToast("Valor recebido insuficiente", "error")
@@ -2874,7 +2877,6 @@ async function finalizeSale() {
     }
 
     try {
-        // Criar a venda principal
         const saleData = {
             customer_name: customerName || "-",
             total_amount: total,
@@ -2882,6 +2884,7 @@ async function finalizeSale() {
             discount_percent: discountPercent,
             discount_amount: discountAmount,
             payment_method: paymentMethod,
+            payment_status: isPending ? "pendente" : "pago",
             items: cart.map(item => ({
                 stock_id: item.id,
                 name: item.name,
@@ -2895,12 +2898,12 @@ async function finalizeSale() {
 
         const discountFactor = 1 - (discountPercent / 100);
 
-        // Registrar cada item como venda individual (compatível com sua tabela sales)
+        // Registrar cada item como venda
         const salePromises = cart.map(async (item) => {
             const stockItem = stock.find(s => s.id == item.id)
             return db.addSale({
                 device: item.name,
-                brand: '',//stockItem?.brand || '',
+                brand: '', // stockItem?.brand || '',
                 model: stockItem.model,
                 condition: stockItem.state || "Usado",
                 sale_price: (item.price * item.quantity) * discountFactor,
@@ -2909,40 +2912,35 @@ async function finalizeSale() {
                 discount_percent: discountPercent,
                 discount_amount_item: (item.price * item.quantity) * (1 - discountFactor),
                 customer_name: customerName || null,
-                notes: `PDV - ${paymentMethod} - Desconto: ${discountPercent}%`,
+                notes: `PDV - ${paymentMethod} - Desconto: ${discountPercent}% ${isPending ? '- A RECEBER' : ''}`,
                 stock_item_id: item.id
             })
         })
-
         await Promise.all(salePromises)
 
-        // Atualizar estoque
+        // Atualizar estoque (como já faz)
         const stockPromises = cart.map(async (item) => {
             const stockItem = stock.find(s => s.id == item.id)
             const newQuantity = stockItem.quantity - item.quantity
-
-            return db.updateStock(item.id, {
-                ...stockItem,
-                quantity: newQuantity
-            })
+            return db.updateStock(item.id, { ...stockItem, quantity: newQuantity })
         })
-
         await Promise.all(stockPromises)
 
-        // Registrar transação financeira
+        // Registrar transação financeira — AQUI está o pulo do gato
         await db.addTransaction({
             type: "entrada",
             category: "venda",
-            description: `${cart.length} item(s)`,
+            description: `${cart.length} item(s)${isPending ? ' - A receber' : ''}`,
             amount: total,
-            status: "pago",
-            customer_name: customerName || null
+            status: isPending ? "pendente" : "pago",
+            customer_name: customerName || null,
+            created_at: new Date().toISOString()
         })
 
-        // Salvar venda atual para impressão
+        // Salvar venda atual (para recibo)
         currentSale = {
             ...saleData,
-            id: Date.now(), // ID temporário
+            id: Date.now(),
             date: new Date().toLocaleString("pt-BR")
         }
 
@@ -2950,8 +2948,10 @@ async function finalizeSale() {
         cart = []
         document.getElementById("pdvCustomerName").value = ""
         document.getElementById("discountPercent").value = ""
+        // NOVO:
+        document.getElementById("salePending").checked = false
 
-        // Atualizar displays
+        // Atualizar telas
         await loadAllData()
         updateDashboard()
         updateCartDisplay()
@@ -2961,17 +2961,49 @@ async function finalizeSale() {
         // Habilitar impressão
         document.getElementById("printReceipt").disabled = false
 
-        showToast(`Venda finalizada! Total: ${formatCurrency(total)}`, "success")
-
+        showToast(
+            `${isPending ? 'Venda registrada como A RECEBER' : 'Venda finalizada!'} Total: ${formatCurrency(total)}`,
+            "success"
+        )
     } catch (error) {
         console.error("Erro ao finalizar venda:", error)
         showToast("Erro ao finalizar venda", "error")
     }
 }
 
+function togglePendingBehavior() {
+    const pending = document.getElementById("salePending")?.checked
+    const paymentMethod = document.getElementById("paymentMethod")?.value
+    const cashFields = document.getElementById("cashPaymentFields")
+
+    // Se está pendente, esconde e limpa campos de dinheiro
+    if (pending) {
+        if (cashFields) cashFields.style.display = "none"
+        document.getElementById("amountReceived").value = ""
+        document.getElementById("changeAmount").textContent = "R$ 0,00"
+    } else {
+        // Se não está pendente e a forma é dinheiro, mostra campos
+        if (paymentMethod === "dinheiro" && cashFields) {
+            cashFields.style.display = "block"
+        }
+    }
+
+    // Recalcula totais/troco quando muda o estado
+    updateCartTotals()
+    calculateChange()
+}
+
+
 // Mostrar/ocultar campos de pagamento
 function togglePaymentFields(paymentMethod) {
     const cashFields = document.getElementById("cashPaymentFields")
+    const pending = document.getElementById("salePending")?.checked
+
+    // Se está pendente, não mostra campos de dinheiro independentemente do método
+    if (pending) {
+        if (cashFields) cashFields.style.display = "none"
+        return
+    }
 
     if (paymentMethod === "dinheiro") {
         cashFields.style.display = "block"
@@ -2987,6 +3019,13 @@ function togglePaymentFields(paymentMethod) {
 // Calcular troco
 function calculateChange() {
     const paymentMethod = document.getElementById("paymentMethod").value
+    const pending = document.getElementById("salePending")?.checked
+    const method = document.getElementById("paymentMethod")?.value
+
+    if (pending || method !== "dinheiro") {
+        document.getElementById("changeAmount").textContent = "R$ 0,00"
+        return
+    }
 
     if (paymentMethod !== "dinheiro") {
         document.getElementById("changeAmount").textContent = "R$ 0,00"
