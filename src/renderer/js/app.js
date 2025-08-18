@@ -2632,7 +2632,7 @@ function createProductCard(product) {
 
     const isLowStock = product.quantity <= 5
     const stockBadge = isLowStock ?
-        `<span class="badge bg-warning text-dark">Estoque baixo</span>` :
+        `<span class="badge bg-warning text-dark">Estoque baixo (${product.quantity})</span>` :
         `<span class="badge bg-success">${product.quantity} disponível</span>`
 
     col.innerHTML = `
