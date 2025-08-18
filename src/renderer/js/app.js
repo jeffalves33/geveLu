@@ -100,6 +100,10 @@ function setupEventListeners() {
         filterStock()
     })
 
+    document.getElementById("stockZeroOnly").addEventListener("change", () => {
+        filterStock()
+    })
+
     // Tipo de venda
     document.querySelectorAll('input[name="saleType"]').forEach((radio) => {
         radio.addEventListener("change", function () {
@@ -424,38 +428,39 @@ function updateSalesTable() {
 }
 
 function updateStockTable() {
-    const tbody = document.getElementById("stockTable")
-    tbody.innerHTML = ""
+  const tbody = document.getElementById("stockTable")
+  tbody.innerHTML = ""
 
-    stock.forEach((item) => {
-        const row = document.createElement("tr")
-        row.innerHTML = `
-            <td>
-                <div>
-                    <strong>${item.name}</strong><br>
-                    ${item.brand && item.model ? `<small class="text-muted">${item.brand} ${item.model}</small>` : ""}
-                </div>
-            </td>
-            <td>${getCategoryLabel(item.category)}</td>
-            <td><strong>${item.quantity}</strong></td>
-            <td>${formatCurrency(item.purchase_price)}</td>
-            <td>${formatCurrency(item.sale_price)}</td>
-            <td>${getStockStatusBadge(item.state)}</td>
-            <td>${item.code || "-"}</td>
-            <td>
-                <div class="dropdown">
-                    <button class="btn btn-light btn-sm" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-                        <i class="bi bi-three-dots-vertical"></i>
-                    </button>
-                    <ul class="dropdown-menu">
-                        <li><a class="dropdown-item edit-stock" href="#" data-stock-id="${item.id}"><i class="bi bi-pencil me-2"></i>Editar</a></li>
-                        <li><a class="dropdown-item delete-stock text-danger" href="#" data-stock-id="${item.id}"><i class="bi bi-trash me-2"></i>Excluir</a></li>
-                    </ul>
-                </div>
-            </td>
-        `
-        tbody.appendChild(row)
-    })
+  stock.forEach((item) => {
+    const row = document.createElement("tr")
+    row.dataset.quantity = item.quantity // <-- para ler depois se quiser
+    row.innerHTML = `
+      <td>
+        <div>
+          <strong>${item.name}</strong><br>
+          ${item.brand && item.model ? `<small class="text-muted">${item.brand} ${item.model}</small>` : ""}
+        </div>
+      </td>
+      <td>${getCategoryLabel(item.category)}</td>
+      <td><strong>${item.quantity}</strong></td>
+      <td>${formatCurrency(item.purchase_price)}</td>
+      <td>${formatCurrency(item.sale_price)}</td>
+      <td>${getStockStatusBadge(item.state)}</td>
+      <td>${item.code || "-"}</td>
+      <td>
+        <div class="dropdown">
+          <button class="btn btn-light btn-sm" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+            <i class="bi bi-three-dots-vertical"></i>
+          </button>
+          <ul class="dropdown-menu">
+            <li><a class="dropdown-item edit-stock" href="#" data-stock-id="${item.id}"><i class="bi bi-pencil me-2"></i>Editar</a></li>
+            <li><a class="dropdown-item delete-stock text-danger" href="#" data-stock-id="${item.id}"><i class="bi bi-trash me-2"></i>Excluir</a></li>
+          </ul>
+        </div>
+      </td>
+    `
+    tbody.appendChild(row)
+  })
 }
 
 function updateFinancialTables() {
@@ -826,20 +831,26 @@ function filterSales(searchTerm) {
 }
 
 function filterStock() {
-    const searchTerm = document.getElementById("stockSearch").value.toLowerCase()
-    const categoryFilter = document.getElementById("stockCategoryFilter").value
-    const rows = document.querySelectorAll("#stockTable tr")
+  const searchTerm = document.getElementById("stockSearch").value.toLowerCase()
+  const categoryFilter = document.getElementById("stockCategoryFilter").value
+  const zeroOnly = document.getElementById("stockZeroOnly")?.checked // pode ser undefined se o checkbox não existir
+  const rows = document.querySelectorAll("#stockTable tr")
 
-    rows.forEach((row) => {
-        const text = row.textContent.toLowerCase()
-        const categoryCell = row.cells[1].textContent
+  rows.forEach((row) => {
+    const text = row.textContent.toLowerCase()
+    const categoryCell = row.cells[1].textContent
+    const quantityText = row.cells[2].textContent.trim()
+    const quantity = parseInt(quantityText, 10) || 0
 
-        const matchesSearch = text.includes(searchTerm)
-        const matchesCategory =
-            categoryFilter === "all" || categoryCell.toLowerCase().includes(getCategoryLabel(categoryFilter).toLowerCase())
+    const matchesSearch = text.includes(searchTerm)
+    const matchesCategory =
+      categoryFilter === "all" ||
+      categoryCell.toLowerCase().includes(getCategoryLabel(categoryFilter).toLowerCase())
 
-        row.style.display = matchesSearch && matchesCategory ? "" : "none"
-    })
+    const matchesZero = !zeroOnly || quantity === 0
+
+    row.style.display = (matchesSearch && matchesCategory && matchesZero) ? "" : "none"
+  })
 }
 
 function initializeDateFilters() {
